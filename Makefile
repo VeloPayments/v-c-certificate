@@ -26,13 +26,13 @@ include $(MODEL_CHECK_DIR)/model_check.mk
 
 #library source files
 SRCDIR=$(PWD)/src
-DIRS=$(SRCDIR)
+DIRS=$(SRCDIR) $(SRCDIR)/parser
 SOURCES=$(foreach d,$(DIRS),$(wildcard $(d)/*.c))
 STRIPPED_SOURCES=$(patsubst $(SRCDIR)/%,%,$(SOURCES))
 
 #library test files
 TESTDIR=$(PWD)/test
-TESTDIRS=$(TESTDIR)
+TESTDIRS=$(TESTDIR) $(TESTDIR)/parser
 TEST_BUILD_DIR=$(HOST_CHECKED_BUILD_DIR)/test
 TEST_DIRS=$(filter-out $(TESTDIR), \
     $(patsubst $(TESTDIR)/%,$(TEST_BUILD_DIR)/%,$(TESTDIRS)))
@@ -199,4 +199,4 @@ $(TESTLIBVCCERT): $(HOST_CHECKED_OBJECTS) $(TEST_OBJECTS) $(GTEST_OBJ)
 	    -o $@ $(TEST_OBJECTS) \
 	    $(HOST_CHECKED_OBJECTS) $(GTEST_OBJ) -lpthread \
 	    -L $(TOOLCHAIN_DIR)/host/lib64 -lstdc++ \
-	    $(VPR_HOST_RELEASE_LINK) $(VCCRYPT_HOST_RELEASE_LINK)
+	    $(VCCRYPT_HOST_RELEASE_LINK) $(VPR_HOST_RELEASE_LINK)
