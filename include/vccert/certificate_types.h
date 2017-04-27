@@ -17,8 +17,8 @@
 extern "C" {
 #endif  //__cplusplus
 
-extern uint8_t vccert_certificate_type_uuid_artifact[16];
-extern uint8_t vccert_certificate_type_uuid_entity[16];
+extern const uint8_t vccert_certificate_type_uuid_artifact[16];
+extern const uint8_t vccert_certificate_type_uuid_entity[16];
 
 /* make this header C++ friendly. */
 #ifdef __cplusplus
