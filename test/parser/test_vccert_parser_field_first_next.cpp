@@ -14,11 +14,11 @@
 
 //forward declarations for dummy certificate delegate methods
 static bool dummy_entity_resolver(
-    void*, void*, uint8_t*, vccrypt_buffer_t*, bool*);
+    void*, void*, const uint8_t*, vccrypt_buffer_t*, bool*);
 static int32_t dummy_state_resolver(
-    void*, void*, uint8_t*);
+    void*, void*, const uint8_t*);
 static vccert_contract_fn_t dummy_contract_resolver(
-    void*, void*, uint8_t*, uint8_t*);
+    void*, void*, const uint8_t*, const uint8_t*);
 
 static const uint8_t* TEST_CERT = (const uint8_t*)
     //field 0x0001 is 0x01020304
@@ -130,7 +130,7 @@ TEST_F(vccert_parser_field_first_next_test, field_search)
  * Dummy entity resolver.
  */
 static bool dummy_entity_resolver(
-    void*, void*, uint8_t*, vccrypt_buffer_t*, bool*)
+    void*, void*, const uint8_t*, vccrypt_buffer_t*, bool*)
 {
     return false;
 }
@@ -139,7 +139,7 @@ static bool dummy_entity_resolver(
  * Dummy entity state resolver.
  */
 static int32_t dummy_state_resolver(
-    void*, void*, uint8_t*)
+    void*, void*, const uint8_t*)
 {
     return 0;
 }
@@ -148,7 +148,7 @@ static int32_t dummy_state_resolver(
  * Dummy contract resolver.
  */
 static vccert_contract_fn_t dummy_contract_resolver(
-    void*, void*, uint8_t*, uint8_t*)
+    void*, void*, const uint8_t*, const uint8_t*)
 {
     return NULL;
 }

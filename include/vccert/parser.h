@@ -76,7 +76,7 @@ typedef bool (*vccert_contract_fn_t)(
  * \returns true if the entity certificate was found, and false otherwise.
  */
 typedef bool (*vccert_parser_entity_resolver_t)(
-    void* options, void* parser, uint8_t* entity_id,
+    void* options, void* parser, const uint8_t* entity_id,
     vccrypt_buffer_t* output_buffer, bool* trusted);
 
 /**
@@ -94,7 +94,7 @@ typedef bool (*vccert_parser_entity_resolver_t)(
  * offset into its state buffer.
  */
 typedef int32_t (*vccert_parser_entity_state_resolver_t)(
-    void* options, void* parser, uint8_t* entity_id);
+    void* options, void* parser, const uint8_t* entity_id);
 
 /**
  * Contract function resolver.
@@ -113,8 +113,8 @@ typedef int32_t (*vccert_parser_entity_state_resolver_t)(
  * \returns a valid contract function on success, and NULL on failure.
  */
 typedef vccert_contract_fn_t (*vccert_parser_contract_resolver_t)(
-    void* options, void* parser, uint8_t* type_id,
-    uint8_t* entity_id);
+    void* options, void* parser, const uint8_t* type_id,
+    const uint8_t* entity_id);
 
 /**
  * The parser options callback structure is used to manage callbacks needed to
