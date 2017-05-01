@@ -50,7 +50,7 @@ int vccert_parser_attest(vccert_parser_context_t* context)
                 &signer_uuid_size) ||
         16 != signer_uuid_size)
     {
-        return 2;
+        return PARSER_ATTEST_ERROR_MISSING_SIGNER_UUID;
     }
 
     /* Now, we need the signature. */
@@ -61,7 +61,7 @@ int vccert_parser_attest(vccert_parser_context_t* context)
                 context, VCCERT_FIELD_TYPE_SIGNATURE, &signature, &signature_size) ||
         context->options->crypto_suite->sign_opts.signature_size != signature_size)
     {
-        return 3;
+        return PARSER_ATTEST_ERROR_MISSING_SIGNATURE;
     }
 
     /* If we get to this point, we need the public signing key for the signer.
@@ -72,7 +72,7 @@ int vccert_parser_attest(vccert_parser_context_t* context)
             context->options, context, signer_uuid, &context->parent_buffer,
             &can_trust))
     {
-        return 4;
+        return PARSER_ATTEST_ERROR_MISSING_SIGNING_CERT;
     }
 
     /* allocate memory for the parent certificate parser context */
@@ -81,7 +81,7 @@ int vccert_parser_attest(vccert_parser_context_t* context)
             context->options->alloc_opts, sizeof(vccert_parser_context_t));
     if (!context->parent)
     {
-        retval = 5;
+        retval = PARSER_ATTEST_ERROR_GENERAL;
         goto buffer_dispose;
     }
 
@@ -91,7 +91,7 @@ int vccert_parser_attest(vccert_parser_context_t* context)
             context->options, context->parent,
             context->parent_buffer.data, context->parent_buffer.size))
     {
-        retval = 6;
+        retval = PARSER_ATTEST_ERROR_GENERAL;
         goto parent_release;
     }
 
@@ -103,7 +103,7 @@ int vccert_parser_attest(vccert_parser_context_t* context)
         /* perform attestation on this certificate */
         if (0 != vccert_parser_attest(context->parent))
         {
-            retval = 7;
+            retval = PARSER_ATTEST_ERROR_CHAIN_ATTESTATION;
             goto parent_dispose;
         }
     }
@@ -119,14 +119,14 @@ int vccert_parser_attest(vccert_parser_context_t* context)
                 &parent_entity_uuid_size) ||
         16 != parent_entity_uuid_size)
     {
-        retval = 8;
+        retval = PARSER_ATTEST_ERROR_SIGNER_UUID_MISMATCH;
         goto parent_dispose;
     }
 
     /* The parent artifact ID should match the signer ID. */
     if (0 != crypto_memcmp(signer_uuid, parent_entity_uuid, signer_uuid_size))
     {
-        retval = 9;
+        retval = PARSER_ATTEST_ERROR_SIGNER_UUID_MISMATCH;
         goto parent_dispose;
     }
 
@@ -139,7 +139,7 @@ int vccert_parser_attest(vccert_parser_context_t* context)
                 &parent_public_signing_key, &parent_public_signing_key_size) ||
         context->options->crypto_suite->sign_opts.public_key_size != parent_public_signing_key_size)
     {
-        retval = 10;
+        retval = PARSER_ATTEST_ERROR_SIGNER_MISSING_SIGNING_KEY;
         goto parent_dispose;
     }
 
@@ -153,7 +153,7 @@ int vccert_parser_attest(vccert_parser_context_t* context)
         vccrypt_suite_buffer_init_for_signature_public_key(
             context->options->crypto_suite, &public_key_buffer))
     {
-        retval = 11;
+        retval = PARSER_ATTEST_ERROR_GENERAL;
         goto parent_dispose;
     }
     memcpy(public_key_buffer.data, parent_public_signing_key,
@@ -165,7 +165,7 @@ int vccert_parser_attest(vccert_parser_context_t* context)
         vccrypt_suite_buffer_init_for_signature(
             context->options->crypto_suite, &signature_buffer))
     {
-        retval = 12;
+        retval = PARSER_ATTEST_ERROR_GENERAL;
         goto public_key_buffer_dispose;
     }
     memcpy(signature_buffer.data, signature, signature_buffer.size);
@@ -176,7 +176,7 @@ int vccert_parser_attest(vccert_parser_context_t* context)
         vccrypt_suite_digital_signature_init(
             context->options->crypto_suite, &sign))
     {
-        retval = 13;
+        retval = PARSER_ATTEST_ERROR_GENERAL;
         goto signature_buffer_dispose;
     }
 
@@ -186,7 +186,7 @@ int vccert_parser_attest(vccert_parser_context_t* context)
             &sign, &signature_buffer, &public_key_buffer, context->cert,
             signature - context->cert))
     {
-        retval = 14;
+        retval = PARSER_ATTEST_ERROR_SIGNATURE_MISMATCH;
         goto sign_dispose;
     }
 
