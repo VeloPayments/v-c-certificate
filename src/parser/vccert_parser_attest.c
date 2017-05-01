@@ -200,7 +200,7 @@ int vccert_parser_attest(vccert_parser_context_t* context)
         FIELD_TYPE_SIZE - FIELD_SIZE_SIZE;
 
     /* At this point, the certificate chain has been attested. */
-    retval = 0;
+    retval = PARSER_ATTEST_SUCCESS;
 
 sign_dispose:
     dispose((disposable_t*)&sign);

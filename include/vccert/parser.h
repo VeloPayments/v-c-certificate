@@ -33,6 +33,7 @@ struct vccert_parser_options;
 /* forward declaration for parser context. */
 struct vccert_parser_context;
 
+#define PARSER_ATTEST_SUCCESS 0x0000
 #define PARSER_ATTEST_ERROR_MISSING_SIGNER_UUID 0x1002
 #define PARSER_ATTEST_ERROR_MISSING_SIGNATURE 0x1003
 #define PARSER_ATTEST_ERROR_MISSING_SIGNING_CERT 0x1004
