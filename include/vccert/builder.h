@@ -24,6 +24,10 @@
 extern "C" {
 #endif  //__cplusplus
 
+#define BUILDER_SIGN_SUCCESS 0x0000
+#define BUILDER_SIGN_ERROR_GENERAL 0x1101
+#define BUILDER_SIGN_ERROR_UNKNOWN 0x1111
+
 /**
  * The builder options structure is used to manage options needed to build a
  * certificate.
