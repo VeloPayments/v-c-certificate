@@ -47,7 +47,7 @@ int vccert_builder_sign(
         FIELD_TYPE_SIZE * 2 + FIELD_SIZE_SIZE * 2 + 16 +
         context->options->crypto_suite->sign_opts.signature_size;
     MODEL_ASSERT(context->buffer.size >= context->offset + field_size);
-    if (context->buffer.size <= context->offset + field_size)
+    if (context->buffer.size < context->offset + field_size)
     {
         return BUILDER_SIGN_ERROR_GENERAL;
     }
