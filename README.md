@@ -18,7 +18,7 @@ libraries are required to link against this library and to run the test cases.
 [vpr-url]: https://github.com/VeloPayments/vpr
 [vccrypt-url]: https://github.com/VeloPayments/vccrypt
 
-The default build target will just build the vccret release library for each
+The default build target will just build the vccert release library for each
 supported platform.  To run unit tests, use the `test` build target.  This will
 build both the release and the checked libraries for the current host.  The
 `test` build target depends on Google Test.  The location of the Google Test
