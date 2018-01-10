@@ -126,7 +126,7 @@ TEST_F(vccert_parser_attest_test, external_dependencies)
 /**
  * Simple happy path attestation.
  */
-TEST_F(vccert_parser_attest_test, happy_path)
+TEST_F(vccert_parser_attest_test, DISABLED_happy_path)
 {
     //the size and raw size should be the same
     ASSERT_EQ(TEST_CERT_SIZE, parser.raw_size);
