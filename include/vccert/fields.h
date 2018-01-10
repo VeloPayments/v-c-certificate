@@ -27,7 +27,10 @@ typedef enum vccert_field_type
 {
     /* Begin of the pre-defined short field codes range. */
     VCCERT_FIELD_TYPE_VELO_RESERVED_BEGIN = 0x0000,
-    /* Certificate Format Version */
+
+    /* Reserved Zero-Tag. */
+    VCCERT_FIELD_TYPE_RESERVED_ZERO_TAG = 0x0000,
+    /* Certificate Format Version. Unsigned 32-bit Big-Endian. */
     VCCERT_FIELD_TYPE_CERTIFICATE_VERSION = 0x0001,
     /* Reserved fields */
     VCCERT_FIELD_TYPE_VELO_RESERVED_0002 = 0x0002,
@@ -49,6 +52,7 @@ typedef enum vccert_field_type
     VCCERT_FIELD_TYPE_CERTIFICATE_VALID_FROM = 0x0010,
     /* Certificate valid to date (uint64_t seconds from Jan-01-1970) */
     VCCERT_FIELD_TYPE_CERTIFICATE_VALID_TO = 0x0011,
+
     /* reserved fields */
     VCCERT_FIELD_TYPE_VELO_RESERVED_0012 = 0x0012,
     VCCERT_FIELD_TYPE_VELO_RESERVED_0013 = 0x0013,
@@ -94,9 +98,13 @@ typedef enum vccert_field_type
     VCCERT_FIELD_TYPE_VELO_RESERVED_0035 = 0x0035,
     VCCERT_FIELD_TYPE_VELO_RESERVED_0036 = 0x0036,
     VCCERT_FIELD_TYPE_VELO_RESERVED_0037 = 0x0037,
-    VCCERT_FIELD_TYPE_VELO_RESERVED_0038 = 0x0038,
-    VCCERT_FIELD_TYPE_VELO_RESERVED_0039 = 0x0039,
-    VCCERT_FIELD_TYPE_VELO_RESERVED_003A = 0x003A,
+    /* Certificate ID.  UUID. */
+    VCCERT_FIELD_TYPE_CERTIFICATE_ID = 0x0038,
+    /* Previous Certificate ID.  UUID. */
+    VCCERT_FIELD_TYPE_PREVIOUS_CERTIFICATE_ID = 0x0039,
+    /* Next Certificate ID.  UUID. */
+    VCCERT_FIELD_TYPE_NEXT_CERTIFICATE_ID = 0x003A,
+    /* reserved fields */
     VCCERT_FIELD_TYPE_VELO_RESERVED_003B = 0x003B,
     VCCERT_FIELD_TYPE_VELO_RESERVED_003C = 0x003C,
     VCCERT_FIELD_TYPE_VELO_RESERVED_003D = 0x003D,
@@ -105,10 +113,12 @@ typedef enum vccert_field_type
 
     /* Artifact Type. (128-bit UUID) */
     VCCERT_FIELD_TYPE_ARTIFACT_TYPE = 0x0040,
+    /* Artifact ID. (128-bit UUID) */
     VCCERT_FIELD_TYPE_ARTIFACT_ID = 0x0041,
+
+    VCCERT_FIELD_TYPE_PREVIOUS_ARTIFACT_STATE = 0x0042,
+    VCCERT_FIELD_TYPE_NEW_ARTIFACT_STATE = 0x0043,
     /* reserved fields */
-    VCCERT_FIELD_TYPE_VELO_RESERVED_0042 = 0x0042,
-    VCCERT_FIELD_TYPE_VELO_RESERVED_0043 = 0x0043,
     VCCERT_FIELD_TYPE_VELO_RESERVED_0044 = 0x0044,
     VCCERT_FIELD_TYPE_VELO_RESERVED_0045 = 0x0045,
     VCCERT_FIELD_TYPE_VELO_RESERVED_0046 = 0x0046,
@@ -146,35 +156,54 @@ typedef enum vccert_field_type
     VCCERT_FIELD_TYPE_VELO_RESERVED_005E = 0x005E,
     VCCERT_FIELD_TYPE_VELO_RESERVED_005F = 0x005F,
 
-    /* Grant Descriptor List (Tuples of Grant ID / Grant Description) */
-    VCCERT_FIELD_TYPE_GRANT_DESCRIPTOR_LIST = 0x0060,
-    /* Grant ID (128-bit UUID) */
-    VCCERT_FIELD_TYPE_GRANT_ID = 0x0061,
-    /* Grant Description (UTF-8 Characters excluding null terminator) */
-    VCCERT_FIELD_TYPE_GRANT_DESCRIPTION = 0x0062,
-    /* Grant List (Tuples of Grant ID) */
-    VCCERT_FIELD_TYPE_GRANT_LIST = 0x0063,
-    /* reserved fields */
-    VCCERT_FIELD_TYPE_VELO_RESERVED_0064 = 0x0064,
-    VCCERT_FIELD_TYPE_VELO_RESERVED_0065 = 0x0065,
-    VCCERT_FIELD_TYPE_VELO_RESERVED_0066 = 0x0066,
-    VCCERT_FIELD_TYPE_VELO_RESERVED_0067 = 0x0067,
-    VCCERT_FIELD_TYPE_VELO_RESERVED_0068 = 0x0068,
-    VCCERT_FIELD_TYPE_VELO_RESERVED_0069 = 0x0069,
-    VCCERT_FIELD_TYPE_VELO_RESERVED_006A = 0x006A,
-    VCCERT_FIELD_TYPE_VELO_RESERVED_006B = 0x006B,
-    VCCERT_FIELD_TYPE_VELO_RESERVED_006C = 0x006C,
-    VCCERT_FIELD_TYPE_VELO_RESERVED_006D = 0x006D,
-    VCCERT_FIELD_TYPE_VELO_RESERVED_006E = 0x006E,
-    VCCERT_FIELD_TYPE_VELO_RESERVED_006F = 0x006F,
+    /* Grant Descriptor Tuple */
+    VCCERT_FIELD_TYPE_GRANT_DESCRIPTOR_TUPLE = 0x0060,
+    /* Grant Description (UTF-8 characters excluding null terminator) */
+    VCCERT_FIELD_TYPE_GRANT_DESCRIPTION = 0x0061,
+    /* The expected type of the subject entity. */
+    VCCERT_FIELD_TYPE_GRANT_SUBJECT_TYPE = 0x0062,
+    /* The expected type of the object artifact. */
+    VCCERT_FIELD_TYPE_GRANT_OBJECT_TYPE = 0x0063,
+    /* The explicit transaction type for this grant. */
+    VCCERT_FIELD_TYPE_GRANT_TRANSACTION_TYPE = 0x0064,
+    /* A tuple value of grant ID, subject UUID, and object UUID. */
+    VCCERT_FIELD_TYPE_GRANT_TUPLE = 0x0065,
+    /* UUID of the subject of a grant. */
+    VCCERT_FIELD_TYPE_GRANT_SUBJECT = 0x0066,
+    /* UUID of the object of a grant. */
+    VCCERT_FIELD_TYPE_GRANT_OBJECT = 0x0067,
+    /* UUID of the first auxiliary type of a grant descriptor. */
+    VCCERT_FIELD_TYPE_GRANT_AUXILIARY_TYPE_1 = 0x0068,
+    /* UUID of the second auxiliary type of a grant descriptor. */
+    VCCERT_FIELD_TYPE_GRANT_AUXILIARY_TYPE_2 = 0x0069,
+    /* UUID of the third auxiliary type of a grant descriptor. */
+    VCCERT_FIELD_TYPE_GRANT_AUXILIARY_TYPE_3 = 0x006A,
+    /* UUID of the fourth auxiliary type of a grant descriptor. */
+    VCCERT_FIELD_TYPE_GRANT_AUXILIARY_TYPE_4 = 0x006B,
+    /* UUID of the first auxiliary of a grant. */
+    VCCERT_FIELD_TYPE_GRANT_AUXILIARY_1 = 0x006C,
+    /* UUID of the second auxiliary of a grant. */
+    VCCERT_FIELD_TYPE_GRANT_AUXILIARY_2 = 0x006D,
+    /* UUID of the third auxiliary of a grant. */
+    VCCERT_FIELD_TYPE_GRANT_AUXILIARY_3 = 0x006E,
+    /* UUID of the fourth auxiliary of a grant. */
+    VCCERT_FIELD_TYPE_GRANT_AUXILIARY_4 = 0x006F,
 
-    VCCERT_FIELD_TYPE_VELO_RESERVED_0070 = 0x0070,
-    VCCERT_FIELD_TYPE_VELO_RESERVED_0071 = 0x0071,
-    VCCERT_FIELD_TYPE_VELO_RESERVED_0072 = 0x0072,
-    VCCERT_FIELD_TYPE_VELO_RESERVED_0073 = 0x0073,
-    VCCERT_FIELD_TYPE_VELO_RESERVED_0074 = 0x0074,
-    VCCERT_FIELD_TYPE_VELO_RESERVED_0075 = 0x0075,
-    VCCERT_FIELD_TYPE_VELO_RESERVED_0076 = 0x0076,
+    /* Artifact Type State Transition Tuple. */
+    VCCERT_FIELD_TYPE_ARTIFACT_TYPE_STATE_TRANSITION_TUPLE = 0x0070,
+    /* User Field Mapping Tuple. */
+    VCCERT_FIELD_TYPE_USER_FIELD_MAPPING_TUPLE = 0x0071,
+    /* Field Mapping Tuple. */
+    VCCERT_FIELD_TYPE_FIELD_MAPPING_TUPLE = 0x0072,
+    /* Contract Bytecode. */
+    VCCERT_FIELD_TYPE_CONTRACT_BYTECODE = 0x0073,
+    /* Short Field Type. Unsigned 16-bit Big Endian. */
+    VCCERT_FIELD_TYPE_SHORT_FIELD_TYPE = 0x0074,
+    /* Long Field Type. UUID. */
+    VCCERT_FIELD_TYPE_LONG_FIELD_TYPE = 0x0075,
+    /* Transaction Type UUID. */
+    VCCERT_FIELD_TYPE_TRANSACTION_TYPE = 0x0076,
+    /* reserved fields */
     VCCERT_FIELD_TYPE_VELO_RESERVED_0077 = 0x0077,
     VCCERT_FIELD_TYPE_VELO_RESERVED_0078 = 0x0078,
     VCCERT_FIELD_TYPE_VELO_RESERVED_0079 = 0x0079,
@@ -185,12 +214,20 @@ typedef enum vccert_field_type
     VCCERT_FIELD_TYPE_VELO_RESERVED_007E = 0x007E,
     VCCERT_FIELD_TYPE_VELO_RESERVED_007F = 0x007F,
 
-    VCCERT_FIELD_TYPE_VELO_RESERVED_0080 = 0x0080,
-    VCCERT_FIELD_TYPE_VELO_RESERVED_0081 = 0x0081,
-    VCCERT_FIELD_TYPE_VELO_RESERVED_0082 = 0x0082,
-    VCCERT_FIELD_TYPE_VELO_RESERVED_0083 = 0x0083,
-    VCCERT_FIELD_TYPE_VELO_RESERVED_0084 = 0x0084,
-    VCCERT_FIELD_TYPE_VELO_RESERVED_0085 = 0x0085,
+    /* Block UUID. */
+    VCCERT_FIELD_TYPE_BLOCK_UUID = 0x0080,
+    /* Previous Block UUID. */
+    VCCERT_FIELD_TYPE_PREVIOUS_BLOCK_UUID = 0x0081,
+    /* Previous Block Hash. */
+    VCCERT_FIELD_TYPE_PREVIOUS_BLOCK_HASH = 0x0082,
+    /* Block Height. */
+    VCCERT_FIELD_TYPE_BLOCK_HEIGHT = 0x0083,
+    /* Wrapped Transaction Tuple. */
+    VCCERT_FIELD_TYPE_WRAPPED_TRANSACTION_TUPLE = 0x0084,
+    /* Block Signature Tuple. */
+    VCCERT_FIELD_TYPE_BLOCK_SIGNATURE_TUPLE = 0x0085,
+
+    /* reserved fields */
     VCCERT_FIELD_TYPE_VELO_RESERVED_0086 = 0x0086,
     VCCERT_FIELD_TYPE_VELO_RESERVED_0087 = 0x0087,
     VCCERT_FIELD_TYPE_VELO_RESERVED_0088 = 0x0088,
@@ -202,6 +239,7 @@ typedef enum vccert_field_type
     VCCERT_FIELD_TYPE_VELO_RESERVED_008E = 0x008E,
     VCCERT_FIELD_TYPE_VELO_RESERVED_008F = 0x008F,
 
+    /* reserved fields */
     VCCERT_FIELD_TYPE_VELO_RESERVED_0090 = 0x0090,
     VCCERT_FIELD_TYPE_VELO_RESERVED_0091 = 0x0091,
     VCCERT_FIELD_TYPE_VELO_RESERVED_0092 = 0x0092,
