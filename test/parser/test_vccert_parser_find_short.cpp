@@ -13,10 +13,14 @@
 #include <vpr/allocator/malloc_allocator.h>
 
 //forward declarations for dummy certificate delegate methods
-static bool dummy_entity_resolver(
-    void*, void*, const uint8_t*, vccrypt_buffer_t*, bool*);
-static int32_t dummy_state_resolver(
-    void*, void*, const uint8_t*);
+static bool dummy_txn_resolver(
+    void*, void*, const uint8_t*, const uint8_t*,
+    vccrypt_buffer_t*, bool*);
+static int32_t dummy_artifact_state_resolver(
+    void*, void*, const uint8_t*, vccrypt_buffer_t*);
+static bool dummy_entity_key_resolver(
+    void*, void*, uint64_t, const uint8_t*, vccrypt_buffer_t*,
+    vccrypt_buffer_t*);
 static vccert_contract_fn_t dummy_contract_resolver(
     void*, void*, const uint8_t*, const uint8_t*);
 
@@ -43,9 +47,9 @@ protected:
 
         options_init_result =
             vccert_parser_options_init(
-                &options, &alloc_opts, &crypto_suite, &dummy_entity_resolver,
-                &dummy_state_resolver, &dummy_contract_resolver,
-                &dummy_context);
+                &options, &alloc_opts, &crypto_suite, &dummy_txn_resolver,
+                &dummy_artifact_state_resolver, &dummy_contract_resolver,
+                &dummy_entity_key_resolver, &dummy_context);
 
         parser_init_result =
             vccert_parser_init(&options, &parser, TEST_CERT, TEST_CERT_SIZE);
@@ -131,21 +135,32 @@ TEST_F(vccert_parser_find_short_test, field_search)
 }
 
 /**
- * Dummy entity resolver.
+ * Dummy transaction resolver.
  */
-static bool dummy_entity_resolver(
-    void*, void*, const uint8_t*, vccrypt_buffer_t*, bool*)
+static bool dummy_txn_resolver(
+    void*, void*, const uint8_t*, const uint8_t*,
+    vccrypt_buffer_t*, bool*)
 {
     return false;
 }
 
 /**
- * Dummy entity state resolver.
+ * Dummy artifact state resolver.
  */
-static int32_t dummy_state_resolver(
-    void*, void*, const uint8_t*)
+static int32_t dummy_artifact_state_resolver(
+    void*, void*, const uint8_t*, vccrypt_buffer_t*)
 {
-    return 0;
+    return -1;
+}
+
+/**
+ * Dummy entity key resolver.
+ */
+static bool dummy_entity_key_resolver(
+    void*, void*, uint64_t, const uint8_t*, vccrypt_buffer_t*,
+    vccrypt_buffer_t*)
+{
+    return false;
 }
 
 /**

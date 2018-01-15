@@ -13,10 +13,14 @@
 #include <vpr/allocator/malloc_allocator.h>
 
 //forward declarations for dummy certificate delegate methods
-static bool dummy_entity_resolver(
-    void*, void*, const uint8_t*, vccrypt_buffer_t*, bool*);
-static int32_t dummy_state_resolver(
-    void*, void*, const uint8_t*);
+static bool dummy_txn_resolver(
+    void*, void*, const uint8_t*, const uint8_t*,
+    vccrypt_buffer_t*, bool*);
+static int32_t dummy_artifact_state_resolver(
+    void*, void*, const uint8_t*, vccrypt_buffer_t*);
+static bool dummy_entity_key_resolver(
+    void*, void*, uint64_t, const uint8_t*, vccrypt_buffer_t*,
+    vccrypt_buffer_t*);
 static vccert_contract_fn_t dummy_contract_resolver(
     void*, void*, const uint8_t*, const uint8_t*);
 
@@ -32,36 +36,55 @@ static const uint8_t* PRIVATE_KEY = (const uint8_t*)
     "\x86\x00\x3a\xda\x0c\x27\xcc\x35";
 #endif
 static const uint8_t* TEST_CERT = (const uint8_t*)
-    //field 0x0001 is 0x01020304
-    "\x00\x01\x00\x04\x01\x02\x03\x04"
-    //field 0x1002 is "Testing 1 2 3"
-    "\x10\x02\x00\x0dTesting 1 2 3"
-    //field 0x1735 is 0x01
-    "\x17\x35\x00\x01\x01"
-    //field 0x0050 is the signer's UUID
-    "\x00\x50\x00\x10\x00\x01\x02\x03\x04\x05\x06\x07"
-    "\x08\x09\x0a\x0b\x0c\x0d\x0e\x0f"
-    //field 0x0051 is the signature
-    "\x00\x51\x00\x40\x8d\x7b\x94\x3e\x85\xa1\x17\xda"
-    "\x4e\x05\xbc\x90\x08\x89\xd2\x90"
-    "\x50\xad\x7d\x78\x99\xb4\x17\xd9"
-    "\xe1\xdf\xe5\xa2\x3a\x95\x52\x6e"
-    "\x02\xc5\xfd\x71\xcc\x69\x01\x67"
-    "\x75\xcf\x0e\x53\x04\xd0\xb4\xff"
-    "\x4c\x69\xc7\x8e\xfa\x81\x0e\x8e"
-    "\xe9\x35\x38\xbf\x9d\xd8\xad\x0d";
-static const size_t TEST_CERT_SIZE = 118;
+    //certificate version
+    "\x00\x01\x00\x04\x00\x01\x00\x00"
+    //certificate valid from / transaction date
+    "\x00\x10\x00\x08\x00\x00\x00\x00\x5a\x5c\x23\x72"
+    //certificate crypto suite
+    "\x00\x20\x00\x02\x00\x01"
+    //certificate type
+    "\x00\x30\x00\x10"
+    "\x52\xa7\xf0\xfb\x8a\x6b\x4d\x03\x86\xa5\x7f\x61\x2f\xcf\x7e\xff"
+    //certificate id / transaction id
+    "\x00\x38\x00\x10"
+    "\x1d\x6e\x32\xfa\x1f\x23\x49\xf4\xa5\xaa\x57\x05\x48\x93\xc5\xf6"
+    //previous certificate id / transaction id
+    "\x00\x39\x00\x10"
+    "\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00"
+    //transaction type
+    "\x00\x76\x00\x10"
+    "\x17\xe1\xfc\x1f\x5d\xd9\x44\xa9\xb4\x9d\x1b\x6c\x1e\xb6\xd0\x11"
+    //artifact type
+    "\x00\x40\x00\x10"
+    "\x6d\x34\x1a\x9b\x42\xaf\x45\x3d\xac\xdb\x4a\x99\x63\xd9\xd1\x4e"
+    //artifact id
+    "\x00\x41\x00\x10"
+    "\x3e\xe2\x99\x7b\x2d\x4f\x48\x2e\x86\x58\x88\x86\x06\xd1\x35\x03"
+    //previous artifact state
+    "\x00\x42\x00\x02\x00\x02"
+    //new artifact state
+    "\x00\x43\x00\x02\x00\x03"
+    //signer id
+    "\x00\x50\x00\x10"
+    "\x71\x1f\x22\x65\xb6\x50\x46\x12\xa7\x3a\xad\x82\x7f\xb2\x71\x18"
+    //signature
+    "\x00\x51\x00\x40"
+    "\x31\xf9\xc2\x79\x3a\x92\xa6\x9c\x61\xf4\x95\x87\xb6\xfe\x53\x03"
+    "\x33\x54\x93\x1d\x9b\xca\xb2\x92\x58\x8f\x97\xdd\xdc\xb1\x35\xab"
+    "\xc9\xeb\xc2\x99\x9a\x69\x3f\x9b\x9d\xa3\x5c\xec\x4a\x82\x10\x6e"
+    "\xab\x06\x26\xe5\xc2\x1b\xa5\x0e\x0b\x2d\xfb\x26\xe1\xef\x93\x03";
 
-static const uint8_t* SIGNER_CERT = (const uint8_t*)
-    //0x0041 is the artifact ID
-    "\x00\x41\x00\x10\x00\x01\x02\x03\x04\x05\x06\x07"
-    "\x08\x09\x0a\x0b\x0c\x0d\x0e\x0f"
-    //0x0053 is the public signing key
-    "\x00\x53\x00\x20\x47\x83\xe9\xf6\x78\xd1\x49\xac"
-    "\xd2\x09\x66\xb0\xab\x88\xf7\xd0"
-    "\x5d\x6d\x4f\x54\x0f\x1f\x23\x82"
-    "\x86\x00\x3a\xda\x0c\x27\xcc\x35";
-static const size_t SIGNER_CERT_SIZE = 104;
+static const size_t TEST_CERT_SIZE = 246;
+
+static const uint8_t* SIGNING_KEY = (const uint8_t*)"\x47\x83\xe9\xf6\x78\xd1\x49\xac"
+                                                    "\xd2\x09\x66\xb0\xab\x88\xf7\xd0"
+                                                    "\x5d\x6d\x4f\x54\x0f\x1f\x23\x82"
+                                                    "\x86\x00\x3a\xda\x0c\x27\xcc\x35";
+
+static const uint8_t* NULL_KEY = (const uint8_t*)"\x00\x00\x00\x00\x00\x00\x00\x00"
+                                                 "\x00\x00\x00\x00\x00\x00\x00\x00"
+                                                 "\x00\x00\x00\x00\x00\x00\x00\x00"
+                                                 "\x00\x00\x00\x00\x00\x00\x00\x00";
 
 class vccert_parser_attest_test : public ::testing::Test {
 protected:
@@ -77,9 +100,9 @@ protected:
 
         options_init_result =
             vccert_parser_options_init(
-                &options, &alloc_opts, &crypto_suite, &dummy_entity_resolver,
-                &dummy_state_resolver, &dummy_contract_resolver,
-                &dummy_context);
+                &options, &alloc_opts, &crypto_suite, &dummy_txn_resolver,
+                &dummy_artifact_state_resolver, &dummy_contract_resolver,
+                &dummy_entity_key_resolver, &dummy_context);
 
         parser_init_result =
             vccert_parser_init(&options, &parser, TEST_CERT, TEST_CERT_SIZE);
@@ -126,14 +149,14 @@ TEST_F(vccert_parser_attest_test, external_dependencies)
 /**
  * Simple happy path attestation.
  */
-TEST_F(vccert_parser_attest_test, DISABLED_happy_path)
+TEST_F(vccert_parser_attest_test, happy_path)
 {
     //the size and raw size should be the same
     ASSERT_EQ(TEST_CERT_SIZE, parser.raw_size);
     ASSERT_EQ(TEST_CERT_SIZE, parser.size);
 
     //attestation should succeed
-    ASSERT_EQ(0, vccert_parser_attest(&parser));
+    ASSERT_EQ(0, vccert_parser_attest(&parser, 77));
 
     //the new size should exclude the signature field.
     ASSERT_EQ(TEST_CERT_SIZE, parser.raw_size);
@@ -141,32 +164,44 @@ TEST_F(vccert_parser_attest_test, DISABLED_happy_path)
 }
 
 /**
- * Dummy entity resolver.
+ * Dummy transaction resolver.
  */
-static bool dummy_entity_resolver(
-    void* options, void*, const uint8_t*,
-    vccrypt_buffer_t* output_buffer, bool* trusted)
+static bool dummy_txn_resolver(
+    void*, void*, const uint8_t*, const uint8_t*,
+    vccrypt_buffer_t*, bool*)
 {
-    vccert_parser_options_t* opts = (vccert_parser_options_t*)options;
+    return false;
+}
 
-    //this resolver will only be called for the signer entity
-    vccrypt_buffer_init(output_buffer, opts->alloc_opts, SIGNER_CERT_SIZE);
-    memcpy(output_buffer->data, SIGNER_CERT, SIGNER_CERT_SIZE);
+/**
+ * Dummy artifact state resolver.
+ */
+static int32_t dummy_artifact_state_resolver(
+    void*, void*, const uint8_t*, vccrypt_buffer_t*)
+{
+    return -1;
+}
 
-    //implicitly trust this certificate
-    *trusted = true;
+/**
+ * Dummy entity key resolver.
+ */
+static bool dummy_entity_key_resolver(
+    void*, void*, uint64_t, const uint8_t*,
+    vccrypt_buffer_t* enc_buffer, vccrypt_buffer_t* sign_buffer)
+{
+    memcpy(enc_buffer->data, NULL_KEY, 32);
+    memcpy(sign_buffer->data, SIGNING_KEY, 32);
 
-    //entity found
     return true;
 }
 
 /**
- * Dummy entity state resolver.
+ * Dummy contract.
  */
-static int32_t dummy_state_resolver(
-    void*, void*, const uint8_t*)
+bool dummy_contract(
+    vccert_parser_options_t*, vccert_parser_context_t*)
 {
-    return 0;
+    return true;
 }
 
 /**
@@ -175,5 +210,5 @@ static int32_t dummy_state_resolver(
 static vccert_contract_fn_t dummy_contract_resolver(
     void*, void*, const uint8_t*, const uint8_t*)
 {
-    return NULL;
+    return &dummy_contract;
 }

@@ -8,16 +8,26 @@
 
 #include <arpa/inet.h>
 #include <gtest/gtest.h>
+#include <iomanip>
+#include <iostream>
 #include <vccert/builder.h>
+#include <vccert/fields.h>
 #include <vccert/parser.h>
 #include <vccrypt/suite.h>
 #include <vpr/allocator/malloc_allocator.h>
 
+
+using namespace std;
+
 //forward declarations for dummy certificate delegate methods
-static bool dummy_entity_resolver(
-    void*, void*, const uint8_t*, vccrypt_buffer_t*, bool*);
-static int32_t dummy_state_resolver(
-    void*, void*, const uint8_t*);
+static bool dummy_txn_resolver(
+    void*, void*, const uint8_t*, const uint8_t*,
+    vccrypt_buffer_t*, bool*);
+static int32_t dummy_artifact_state_resolver(
+    void*, void*, const uint8_t*, vccrypt_buffer_t*);
+static bool dummy_entity_key_resolver(
+    void*, void*, uint64_t, const uint8_t*, vccrypt_buffer_t*,
+    vccrypt_buffer_t*);
 static vccert_contract_fn_t dummy_contract_resolver(
     void*, void*, const uint8_t*, const uint8_t*);
 
@@ -37,9 +47,9 @@ protected:
 
         parser_opts_init_result =
             vccert_parser_options_init(
-                &parser_opts, &alloc_opts, &crypto_suite, &dummy_entity_resolver,
-                &dummy_state_resolver, &dummy_contract_resolver,
-                &dummy_context);
+                &parser_opts, &alloc_opts, &crypto_suite, &dummy_txn_resolver,
+                &dummy_artifact_state_resolver, &dummy_contract_resolver,
+                &dummy_entity_key_resolver, &dummy_context);
 
         builder_opts_init_result =
             vccert_builder_options_init(
@@ -47,10 +57,19 @@ protected:
 
         builder_init_result =
             vccert_builder_init(&builder_opts, &builder, CERT_MAX_SIZE);
+
+        private_key_buffer_result =
+            vccrypt_suite_buffer_init_for_signature_private_key(
+                &crypto_suite, &private_key_buffer);
     }
 
     void TearDown() override
     {
+        if (private_key_buffer_result == 0)
+        {
+            dispose((disposable_t*)&private_key_buffer);
+        }
+
         if (builder_init_result == 0)
         {
             dispose((disposable_t*)&builder);
@@ -77,11 +96,13 @@ protected:
     int suite_init_result, parser_opts_init_result, builder_opts_init_result;
     int builder_init_result;
     int dummy_context;
+    int private_key_buffer_result;
     allocator_options_t alloc_opts;
     vccrypt_suite_options_t crypto_suite;
     vccert_parser_options_t parser_opts;
     vccert_builder_options_t builder_opts;
     vccert_builder_context_t builder;
+    vccrypt_buffer_t private_key_buffer;
 };
 
 /**
@@ -533,22 +554,131 @@ TEST_F(vccert_builder_test, vccert_builder_emit)
     EXPECT_EQ(builder.offset, size);
 }
 
+static const uint8_t* PRIVATE_KEY = (const uint8_t*)"\x65\x93\x21\xd0\x35\xa9\xf8\xcf"
+                                                    "\x35\x37\xd1\xd1\x82\xfd\xee\xf8"
+                                                    "\x92\x8e\x0c\xfe\xb4\x56\x4b\x2d"
+                                                    "\xb5\x11\x60\x6d\xc6\xf6\x13\xbd"
+                                                    "\x47\x83\xe9\xf6\x78\xd1\x49\xac"
+                                                    "\xd2\x09\x66\xb0\xab\x88\xf7\xd0"
+                                                    "\x5d\x6d\x4f\x54\x0f\x1f\x23\x82"
+                                                    "\x86\x00\x3a\xda\x0c\x27\xcc\x35";
+
+static const uint8_t* SIGNER_ID = (const uint8_t*)"\x71\x1f\x22\x65\xb6\x50\x46\x12"
+                                                  "\xa7\x3a\xad\x82\x7f\xb2\x71\x18";
+
 /**
- * Dummy entity resolver.
+ * Test that we can create a signed certificate.
  */
-static bool dummy_entity_resolver(
-    void*, void*, const uint8_t*, vccrypt_buffer_t*, bool*)
+TEST_F(vccert_builder_test, vccert_build_signed)
+{
+    /* certificate version */
+    ASSERT_EQ(0,
+        vccert_builder_add_short_uint32(
+            &builder, VCCERT_FIELD_TYPE_CERTIFICATE_VERSION, 0x00010000UL));
+    /* transaction timestamp */
+    ASSERT_EQ(0,
+        vccert_builder_add_short_uint64(
+            &builder, VCCERT_FIELD_TYPE_CERTIFICATE_VALID_FROM, 1515987826));
+    /* crypto suite */
+    ASSERT_EQ(0,
+        vccert_builder_add_short_uint16(
+            &builder, VCCERT_FIELD_TYPE_CERTIFICATE_CRYPTO_SUITE, 0x0001));
+    /* certificate type */
+    ASSERT_EQ(0,
+        vccert_builder_add_short_UUID(
+            &builder, VCCERT_FIELD_TYPE_CERTIFICATE_TYPE,
+            (const uint8_t*)"\x52\xa7\xf0\xfb\x8a\x6b\x4d\x03\x86\xa5\x7f\x61\x2f\xcf\x7e\xff"));
+    /* transaction id */
+    ASSERT_EQ(0,
+        vccert_builder_add_short_UUID(
+            &builder, VCCERT_FIELD_TYPE_CERTIFICATE_ID,
+            (const uint8_t*)"\x1d\x6e\x32\xfa\x1f\x23\x49\xf4\xa5\xaa\x57\x05\x48\x93\xc5\xf6"));
+    /* transaction link */
+    ASSERT_EQ(0,
+        vccert_builder_add_short_UUID(
+            &builder, VCCERT_FIELD_TYPE_PREVIOUS_CERTIFICATE_ID,
+            (const uint8_t*)"\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00"));
+    /* transaction type */
+    ASSERT_EQ(0,
+        vccert_builder_add_short_UUID(
+            &builder, VCCERT_FIELD_TYPE_TRANSACTION_TYPE,
+            (const uint8_t*)"\x17\xe1\xfc\x1f\x5d\xd9\x44\xa9\xb4\x9d\x1b\x6c\x1e\xb6\xd0\x11"));
+    /* artifact type */
+    ASSERT_EQ(0,
+        vccert_builder_add_short_UUID(
+            &builder, VCCERT_FIELD_TYPE_ARTIFACT_TYPE,
+            (const uint8_t*)"\x6d\x34\x1a\x9b\x42\xaf\x45\x3d\xac\xdb\x4a\x99\x63\xd9\xd1\x4e"));
+    /* artifact id */
+    ASSERT_EQ(0,
+        vccert_builder_add_short_UUID(
+            &builder, VCCERT_FIELD_TYPE_ARTIFACT_ID,
+            (const uint8_t*)"\x3e\xe2\x99\x7b\x2d\x4f\x48\x2e\x86\x58\x88\x86\x06\xd1\x35\x03"));
+    /* previous state */
+    ASSERT_EQ(0,
+        vccert_builder_add_short_uint16(
+            &builder, VCCERT_FIELD_TYPE_PREVIOUS_ARTIFACT_STATE, 0x0002));
+    /* next state */
+    ASSERT_EQ(0,
+        vccert_builder_add_short_uint16(
+            &builder, VCCERT_FIELD_TYPE_NEW_ARTIFACT_STATE, 0x0003));
+    /* read the private key into a buffer */
+    ASSERT_EQ(0,
+        vccrypt_buffer_read_data(
+            &private_key_buffer, PRIVATE_KEY, 64));
+    /* sign the certificate */
+    ASSERT_EQ(0,
+        vccert_builder_sign(
+            &builder, SIGNER_ID, &private_key_buffer));
+
+    size_t size = 0;
+    auto cert = vccert_builder_emit(&builder, &size);
+    ASSERT_NE(nullptr, cert);
+    ASSERT_NE(0U, size);
+
+#if 0
+    cout << "Size: " << size << endl << endl;
+
+    for (size_t i = 0; i < size; ++i)
+    {
+        if (i % 16 == 0)
+            cout << endl;
+
+        cout << "0x";
+        auto f = cout.flags();
+        cout << hex << setw(2) << setfill('0') << (int)cert[i];
+        cout.flags(f);
+        cout << ", ";
+    }
+#endif
+}
+
+/**
+ * Dummy transaction resolver.
+ */
+static bool dummy_txn_resolver(
+    void*, void*, const uint8_t*, const uint8_t*,
+    vccrypt_buffer_t*, bool*)
 {
     return false;
 }
 
 /**
- * Dummy entity state resolver.
+ * Dummy artifact state resolver.
  */
-static int32_t dummy_state_resolver(
-    void*, void*, const uint8_t*)
+static int32_t dummy_artifact_state_resolver(
+    void*, void*, const uint8_t*, vccrypt_buffer_t*)
 {
-    return 0;
+    return -1;
+}
+
+/**
+ * Dummy entity key resolver.
+ */
+static bool dummy_entity_key_resolver(
+    void*, void*, uint64_t, const uint8_t*, vccrypt_buffer_t*,
+    vccrypt_buffer_t*)
+{
+    return false;
 }
 
 /**

@@ -12,10 +12,14 @@
 #include <vpr/allocator/malloc_allocator.h>
 
 //forward declarations for dummy certificate delegate methods
-static bool dummy_entity_resolver(
-    void*, void*, const uint8_t*, vccrypt_buffer_t*, bool*);
-static int32_t dummy_state_resolver(
-    void*, void*, const uint8_t*);
+static bool dummy_txn_resolver(
+    void*, void*, const uint8_t*, const uint8_t*,
+    vccrypt_buffer_t*, bool*);
+static int32_t dummy_artifact_state_resolver(
+    void*, void*, const uint8_t*, vccrypt_buffer_t*);
+static bool dummy_entity_key_resolver(
+    void*, void*, uint64_t, const uint8_t*, vccrypt_buffer_t*,
+    vccrypt_buffer_t*);
 static vccert_contract_fn_t dummy_contract_resolver(
     void*, void*, const uint8_t*, const uint8_t*);
 
@@ -65,38 +69,51 @@ TEST_F(vccert_parser_options_init_test, parameter_checks)
     //test the null check for the options structure
     ASSERT_NE(0,
         vccert_parser_options_init(
-            NULL, &alloc_opts, &crypto_suite, &dummy_entity_resolver,
-            &dummy_state_resolver, &dummy_contract_resolver, NULL));
+            NULL, &alloc_opts, &crypto_suite, &dummy_txn_resolver,
+            &dummy_artifact_state_resolver, &dummy_contract_resolver,
+            &dummy_entity_key_resolver, NULL));
 
     //test the null check for the allocator
     ASSERT_NE(0,
         vccert_parser_options_init(
-            &options, NULL, &crypto_suite, &dummy_entity_resolver,
-            &dummy_state_resolver, &dummy_contract_resolver, NULL));
+            &options, NULL, &crypto_suite, &dummy_txn_resolver,
+            &dummy_artifact_state_resolver, &dummy_contract_resolver,
+            &dummy_entity_key_resolver, NULL));
 
     //test the null check for the crypto suite
     ASSERT_NE(0,
         vccert_parser_options_init(
-            &options, &alloc_opts, NULL, &dummy_entity_resolver,
-            &dummy_state_resolver, &dummy_contract_resolver, NULL));
+            &options, &alloc_opts, NULL, &dummy_txn_resolver,
+            &dummy_artifact_state_resolver, &dummy_contract_resolver,
+            &dummy_entity_key_resolver, NULL));
 
-    //test the null check for the entity resolver
+    //test the null check for the transaction resolver
     ASSERT_NE(0,
         vccert_parser_options_init(
             &options, &alloc_opts, &crypto_suite, NULL,
-            &dummy_state_resolver, &dummy_contract_resolver, NULL));
+            &dummy_artifact_state_resolver, &dummy_contract_resolver,
+            &dummy_entity_key_resolver, NULL));
 
-    //test the null check for the entity state resolver
+    //test the null check for the artifact state resolver
     ASSERT_NE(0,
         vccert_parser_options_init(
-            &options, &alloc_opts, &crypto_suite, &dummy_entity_resolver,
-            NULL, &dummy_contract_resolver, NULL));
+            &options, &alloc_opts, &crypto_suite, &dummy_txn_resolver,
+            NULL, &dummy_contract_resolver,
+            &dummy_entity_key_resolver, NULL));
 
     //test the null check for the contract resolver
     ASSERT_NE(0,
         vccert_parser_options_init(
-            &options, &alloc_opts, &crypto_suite, &dummy_entity_resolver,
-            &dummy_state_resolver, NULL, NULL));
+            &options, &alloc_opts, &crypto_suite, &dummy_txn_resolver,
+            &dummy_artifact_state_resolver, NULL,
+            &dummy_entity_key_resolver, NULL));
+
+    //test the null check for the contract resolver
+    ASSERT_NE(0,
+        vccert_parser_options_init(
+            &options, &alloc_opts, &crypto_suite, &dummy_txn_resolver,
+            &dummy_artifact_state_resolver, &dummy_contract_resolver,
+            NULL, NULL));
 }
 
 /**
@@ -109,17 +126,20 @@ TEST_F(vccert_parser_options_init_test, init)
 
     ASSERT_EQ(0,
         vccert_parser_options_init(
-            &options, &alloc_opts, &crypto_suite, &dummy_entity_resolver,
-            &dummy_state_resolver, &dummy_contract_resolver, &dummy_context));
+            &options, &alloc_opts, &crypto_suite, &dummy_txn_resolver,
+            &dummy_artifact_state_resolver, &dummy_contract_resolver,
+            &dummy_entity_key_resolver, &dummy_context));
 
     EXPECT_NE((dispose_method_t)NULL, options.hdr.dispose);
     EXPECT_EQ(&alloc_opts, options.alloc_opts);
     EXPECT_EQ(&crypto_suite, options.crypto_suite);
-    EXPECT_EQ(&dummy_entity_resolver, options.parser_options_entity_resolver);
-    EXPECT_EQ(&dummy_state_resolver,
-        options.parser_options_entity_state_resolver);
+    EXPECT_EQ(&dummy_txn_resolver, options.parser_options_transaction_resolver);
+    EXPECT_EQ(&dummy_artifact_state_resolver,
+        options.parser_options_artifact_state_resolver);
     EXPECT_EQ(&dummy_contract_resolver,
         options.parser_options_contract_resolver);
+    EXPECT_EQ(&dummy_entity_key_resolver,
+        options.parser_options_entity_key_resolver);
     EXPECT_EQ(&dummy_context, options.context);
 
     //dispose of the structure
@@ -127,21 +147,32 @@ TEST_F(vccert_parser_options_init_test, init)
 }
 
 /**
- * Dummy entity resolver.
+ * Dummy transaction resolver.
  */
-static bool dummy_entity_resolver(
-    void*, void*, const uint8_t*, vccrypt_buffer_t*, bool*)
+static bool dummy_txn_resolver(
+    void*, void*, const uint8_t*, const uint8_t*,
+    vccrypt_buffer_t*, bool*)
 {
     return false;
 }
 
 /**
- * Dummy entity state resolver.
+ * Dummy artifact state resolver.
  */
-static int32_t dummy_state_resolver(
-    void*, void*, const uint8_t*)
+static int32_t dummy_artifact_state_resolver(
+    void*, void*, const uint8_t*, vccrypt_buffer_t*)
 {
-    return 0;
+    return -1;
+}
+
+/**
+ * Dummy entity key resolver.
+ */
+static bool dummy_entity_key_resolver(
+    void*, void*, uint64_t, const uint8_t*, vccrypt_buffer_t*,
+    vccrypt_buffer_t*)
+{
+    return false;
 }
 
 /**

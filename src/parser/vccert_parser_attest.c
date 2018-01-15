@@ -19,10 +19,11 @@
  *
  * \param context           The parser context structure holding the certificate
  *                          on which attestation should be performed.
+ * \param height            The current height of the blockchani.
  *
  * \returns 0 on success and non-zero on failure.
  */
-int vccert_parser_attest(vccert_parser_context_t* context)
+int vccert_parser_attest(vccert_parser_context_t* context, uint64_t height)
 {
     int retval = 1;
 
@@ -30,9 +31,9 @@ int vccert_parser_attest(vccert_parser_context_t* context)
     MODEL_ASSERT(context->options != NULL);
     MODEL_ASSERT(context->options->alloc_opts != NULL);
     MODEL_ASSERT(context->options->crypto_suite != NULL);
-    MODEL_ASSERT(context->options->parser_options_entity_resolver != NULL);
+    MODEL_ASSERT(context->options->parser_options_transaction_resolver != NULL);
     MODEL_ASSERT(
-        context->options->parser_options_entity_state_resolver != NULL);
+        context->options->parser_options_artifact_state_resolver != NULL);
     MODEL_ASSERT(context->options->parser_options_contract_resolver != NULL);
 
     /* Attestation uses the raw size of the certificate.  In case attestation
@@ -64,100 +65,39 @@ int vccert_parser_attest(vccert_parser_context_t* context)
         return PARSER_ATTEST_ERROR_MISSING_SIGNATURE;
     }
 
-    /* If we get to this point, we need the public signing key for the signer.
-     * Request this from the caller by using the entity resolver callback.
-     */
-    bool can_trust = false;
-    if (!context->options->parser_options_entity_resolver(
-            context->options, context, signer_uuid, &context->parent_buffer,
-            &can_trust))
-    {
-        return PARSER_ATTEST_ERROR_MISSING_SIGNING_CERT;
-    }
-
-    /* allocate memory for the parent certificate parser context */
-    context->parent =
-        (vccert_parser_context_t*)allocate(
-            context->options->alloc_opts, sizeof(vccert_parser_context_t));
-    if (!context->parent)
-    {
-        retval = PARSER_ATTEST_ERROR_GENERAL;
-        goto buffer_dispose;
-    }
-
-    /* initialize the parent certificate parser */
-    if (0 !=
-        vccert_parser_init(
-            context->options, context->parent,
-            context->parent_buffer.data, context->parent_buffer.size))
-    {
-        retval = PARSER_ATTEST_ERROR_GENERAL;
-        goto parent_release;
-    }
-
-    /* if the certificate isn't trusted, then we must recursively attest it
-     * before continuing.
-     */
-    if (!can_trust)
-    {
-        /* perform attestation on this certificate */
-        if (0 != vccert_parser_attest(context->parent))
-        {
-            retval = PARSER_ATTEST_ERROR_CHAIN_ATTESTATION;
-            goto parent_dispose;
-        }
-    }
-
-    /* at this point, we can trust the parent certificate.  Verify that the
-     * entity UUID matches the signer UUID.
-     */
-    const uint8_t* parent_entity_uuid;
-    size_t parent_entity_uuid_size;
-    if (0 !=
-            vccert_parser_find_short(
-                context->parent, VCCERT_FIELD_TYPE_ARTIFACT_ID, &parent_entity_uuid,
-                &parent_entity_uuid_size) ||
-        16 != parent_entity_uuid_size)
-    {
-        retval = PARSER_ATTEST_ERROR_SIGNER_UUID_MISMATCH;
-        goto parent_dispose;
-    }
-
-    /* The parent artifact ID should match the signer ID. */
-    if (0 != crypto_memcmp(signer_uuid, parent_entity_uuid, signer_uuid_size))
-    {
-        retval = PARSER_ATTEST_ERROR_SIGNER_UUID_MISMATCH;
-        goto parent_dispose;
-    }
-
-    /* Get the parent public signing key. */
-    const uint8_t* parent_public_signing_key;
-    size_t parent_public_signing_key_size;
-    if (0 !=
-            vccert_parser_find_short(
-                context->parent, VCCERT_FIELD_TYPE_PUBLIC_SIGNING_KEY,
-                &parent_public_signing_key, &parent_public_signing_key_size) ||
-        context->options->crypto_suite->sign_opts.public_key_size != parent_public_signing_key_size)
-    {
-        retval = PARSER_ATTEST_ERROR_SIGNER_MISSING_SIGNING_KEY;
-        goto parent_dispose;
-    }
-
-    /* We can now compute the signature of the child certificate and verify that
-     * it matches the signature field.
-     */
-
-    /* Create a buffer for the public signing key. */
+    /* Allocate a buffer for the signing entity's public signing key. */
     vccrypt_buffer_t public_key_buffer;
     if (0 !=
         vccrypt_suite_buffer_init_for_signature_public_key(
             context->options->crypto_suite, &public_key_buffer))
     {
-        retval = PARSER_ATTEST_ERROR_GENERAL;
-        goto parent_dispose;
+        return PARSER_ATTEST_ERROR_GENERAL;
     }
-    memcpy(public_key_buffer.data, parent_public_signing_key,
-        public_key_buffer.size);
+
+    /* Allocate a buffer for the signing entity's public encryption key.  */
+    vccrypt_buffer_t public_enc_key_buffer;
+    if (0 !=
+        vccrypt_suite_buffer_init_for_cipher_key_agreement_public_key(
+            context->options->crypto_suite, &public_enc_key_buffer))
+    {
+        retval = PARSER_ATTEST_ERROR_GENERAL;
+        goto public_key_buffer_dispose;
+    }
+
+    /* If we get to this point, we need the public signing key for the signer.
+     * Request this from the caller by using the entity key resolver callback.
+     */
+    if (!context->options->parser_options_entity_key_resolver(
+            context->options, context, height, signer_uuid,
+            &public_enc_key_buffer, &public_key_buffer))
+    {
+        retval = PARSER_ATTEST_ERROR_MISSING_SIGNING_CERT;
+        goto public_enc_key_buffer_dispose;
+    }
+
+    /* We can now compute the signature of the child certificate and verify that
+     * it matches the signature field.
+     */
 
     /* Create a buffer for the signature. */
     vccrypt_buffer_t signature_buffer;
@@ -166,7 +106,7 @@ int vccert_parser_attest(vccert_parser_context_t* context)
             context->options->crypto_suite, &signature_buffer))
     {
         retval = PARSER_ATTEST_ERROR_GENERAL;
-        goto public_key_buffer_dispose;
+        goto public_enc_key_buffer_dispose;
     }
     memcpy(signature_buffer.data, signature, signature_buffer.size);
 
@@ -190,7 +130,31 @@ int vccert_parser_attest(vccert_parser_context_t* context)
         goto sign_dispose;
     }
 
-    /* TODO - add smart contract capability */
+    /* get the transaction type id */
+    const uint8_t* txn_type;
+    size_t txn_type_size;
+    if (0 !=
+            vccert_parser_find_short(
+                context, VCCERT_FIELD_TYPE_TRANSACTION_TYPE, &txn_type,
+                &txn_type_size) ||
+        16 != txn_type_size)
+    {
+        retval = PARSER_ATTEST_ERROR_MISSING_TRANSACTION_TYPE;
+        goto sign_dispose;
+    }
+
+    /* get the artifact id */
+    const uint8_t* artifact_id;
+    size_t artifact_id_size;
+    if (0 !=
+            vccert_parser_find_short(
+                context, VCCERT_FIELD_TYPE_TRANSACTION_TYPE, &artifact_id,
+                &artifact_id_size) ||
+        16 != artifact_id_size)
+    {
+        retval = PARSER_ATTEST_ERROR_MISSING_ARTIFACT_ID;
+        goto sign_dispose;
+    }
 
     /* Adjust the size to include only what has been verified through
      * attestation.  Any fields past this point are outside of the signature and
@@ -198,6 +162,23 @@ int vccert_parser_attest(vccert_parser_context_t* context)
      * otherwise valid certificate and fool the parser into trusting them. */
     context->size = (signature - context->cert) -
         FIELD_TYPE_SIZE - FIELD_SIZE_SIZE;
+
+    /* lookup the contract function */
+    vccert_contract_fn_t contract =
+        context->options->parser_options_contract_resolver(
+            context->options, context, txn_type, artifact_id);
+    if (contract == NULL)
+    {
+        retval = PARSER_ATTEST_ERROR_MISSING_CONTRACT;
+        goto sign_dispose;
+    }
+
+    /* execute the contract to verify this transaction. */
+    if (!(*contract)(context->options, context))
+    {
+        retval = PARSER_ATTEST_ERROR_CONTRACT_VERIFICATION;
+        goto sign_dispose;
+    }
 
     /* At this point, the certificate chain has been attested. */
     retval = PARSER_ATTEST_SUCCESS;
@@ -208,22 +189,11 @@ sign_dispose:
 signature_buffer_dispose:
     dispose((disposable_t*)&signature_buffer);
 
+public_enc_key_buffer_dispose:
+    dispose((disposable_t*)&public_enc_key_buffer);
+
 public_key_buffer_dispose:
     dispose((disposable_t*)&public_key_buffer);
-
-parent_dispose:
-    if (context->parent)
-        dispose((disposable_t*)context->parent);
-
-parent_release:
-    if (context->parent)
-        release(context->options->alloc_opts, context->parent);
-    context->parent = NULL;
-
-buffer_dispose:
-    dispose((disposable_t*)&context->parent_buffer);
-    context->parent_buffer.data = NULL;
-    context->parent_buffer.size = 0;
 
     return retval;
 }

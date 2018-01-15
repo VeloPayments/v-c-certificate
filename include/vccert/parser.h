@@ -41,6 +41,10 @@ struct vccert_parser_context;
 #define PARSER_ATTEST_ERROR_SIGNER_UUID_MISMATCH 0x1006
 #define PARSER_ATTEST_ERROR_SIGNER_MISSING_SIGNING_KEY 0x1007
 #define PARSER_ATTEST_ERROR_SIGNATURE_MISMATCH 0x1008
+#define PARSER_ATTEST_ERROR_MISSING_CONTRACT 0x1009
+#define PARSER_ATTEST_ERROR_CONTRACT_VERIFICATION 0x100A
+#define PARSER_ATTEST_ERROR_MISSING_TRANSACTION_TYPE 0x100B
+#define PARSER_ATTEST_ERROR_MISSING_ARTIFACT_ID 0x100C
 #define PARSER_ATTEST_ERROR_GENERAL 0x1101
 
 /**
@@ -57,26 +61,28 @@ typedef bool (*vccert_contract_fn_t)(
     struct vccert_parser_context* context);
 
 /**
- * Entity resolver function pointer.
+ * Artifact transaction resolver function pointer.
  *
- * Look up the entity certificate associated with the given UUID.  Note that
- * the entity UUID must match the values provided to this callback.
- * The callback updates the pointer to the buffer provided to point to a
- * copy of this certificate and the Boolean flag to indicate whether this
- * certificate can be trusted or must also be attested.  Note that when used
- * in conjunction with a blockchain structure, the current state of the
- * blockchain should be consulted in order to ensure that the requested
- * entity is in a live state
+ * Look up the last transaction certificate associated with the given artifact
+ * UUID.  Note that the artifact UUID must match the values provided to this
+ * callback.  The callback updates the pointer to the buffer provided to point
+ * to a copy of this certificate and the Boolean flag to indicate whether this
+ * certificate can be trusted or must also be attested.  Optionally, a
+ * transaction UUID can be provided to pick an older transaction associated with
+ * this artifact.
  *
  * \param options           Opaque pointer to this options structure.
  * \param parser            Opaque pointer to the parser context.
- * \param entity_id         A pointer to the buffer holding the 128-bit
- *                          entity UUID for the entity certificate.
+ * \param artifact_id       A pointer to the buffer holding the 128-bit
+ *                          artifact UUID.
+ * \param txn_id            Either a pointer to a specific transaction UUID to
+ *                          look up for this artifact, or NULL if the last
+ *                          transaction should be queried.
  * \param output_buffer     A pointer to a vccrypt_buffer_t buffer that
  *                          should be allocated with a copy of the requested
- *                          entity on success.
+ *                          transaction on success.
  * \param trusted           A pointer to a boolean flag that should be set
- *                          to true if this entity certificate can be
+ *                          to true if this transaction certificate can be
  *                          implicitly trusted, and false it if should be
  *                          further tested.  NOTE: this flag should ONLY be
  *                          set to true if this certificate previously
@@ -85,46 +91,77 @@ typedef bool (*vccert_contract_fn_t)(
  *
  * \returns true if the entity certificate was found, and false otherwise.
  */
-typedef bool (*vccert_parser_entity_resolver_t)(
-    void* options, void* parser, const uint8_t* entity_id,
-    vccrypt_buffer_t* output_buffer, bool* trusted);
+typedef bool (*vccert_parser_transaction_resolver_t)(
+    void* options, void* parser, const uint8_t* artifact_id,
+    const uint8_t* txn_id, vccrypt_buffer_t* output_buffer,
+    bool* trusted);
 
 /**
- * Entity state resolver.
+ * Artifact state resolver.
  *
- * Get the state of the entity at the current time frame.
+ * Get the state of the artifact at the current time frame.
  *
  * \param options           Opaque pointer to this options structure.
  * \param parser            Opaque pointer to the parser context.
- * \param entity_id         A pointer to the buffer holding the 128-bit
- *                          entity UUID for the entity in question.
+ * \param artifact_id       A pointer to the buffer holding the 128-bit
+ *                          artifact UUID for the entity in question.
+ * \param txn_id            Optional pointer to a buffer to receive the last
+ *                          transaction UUID associated with this artifact.
  *
- * \returns -1 if the entity cannot be found or if the entity state is
- * unknown.  Otherwise, returns the state of the entity as a numerical
- * offset into its state buffer.
+ * \returns -1 if the artifact cannot be found or if the artifact state is
+ * unknown.  Otherwise, returns the state of the artifact.
  */
-typedef int32_t (*vccert_parser_entity_state_resolver_t)(
-    void* options, void* parser, const uint8_t* entity_id);
+typedef int32_t (*vccert_parser_artifact_state_resolver_t)(
+    void* options, void* parser, const uint8_t* artifact_id,
+    vccrypt_buffer_t* txn_id);
 
 /**
  * Contract function resolver.
  *
- * Get the contract function associated with the given certificate type UUID.
+ * Get the contract function associated with the given transaction type UUID.
  * This contract function will be used to perform further attestation of
  * this certificate.
  *
  * \param options           Opaque pointer to this options structure.
  * \param parser            Opaque pointer to the parser context.
  * \param type_id           A pointer to the buffer holding the 128-bit
- *                          certificate type ID for this certificate.
- * \param entity_id         A pointer to the buffer holding the 128-bit
- *                          entity UUID for the entity in question.
+ *                          transaction type ID for this certificate.
+ * \param artifact_id       A pointer to the buffer holding the 128-bit
+ *                          artifact UUID for the artifact in question.
  *
  * \returns a valid contract function on success, and NULL on failure.
  */
 typedef vccert_contract_fn_t (*vccert_parser_contract_resolver_t)(
     void* options, void* parser, const uint8_t* type_id,
-    const uint8_t* entity_id);
+    const uint8_t* artifact_id);
+
+/**
+ * Entity key resolver.
+ *
+ * Get the public portions of the encryption and signing keys for a given
+ * entity.  The implementation of this function is responsible for caching
+ * details about a given entity from the blockchain, managing key rotation /
+ * change operations, and managing expiry.
+ *
+ * \param options           Opaque pointer to this options structure.
+ * \param parser            Opaque pointer to the parser context.
+ * \param height            The blockchain height at the point when a given
+ *                          entity is required.
+ * \param entity_id         The entity ID to search for.
+ * \param pubenckey_buffer  A buffer to receive the public encryption key.
+ * \param pubsignkey_buffer A buffer to receive the public signing key.
+ *
+ * \returns true if the entity was found and false if the entity was not found.
+ *          This return value represents the entity lifetime AT THE GIVEN BLOCK
+ *          HEIGHT.  Likewise, the encrypting and signing keys populated were
+ *          the keys used by that entity at that point.  This ensures that
+ *          records are valid from a temporal perspective.
+ */
+typedef bool (*vccert_parser_entity_key_resolver_t)(
+    void* options, void* parser, uint64_t height,
+    const uint8_t* entity_id,
+    vccrypt_buffer_t* pubenckey_buffer,
+    vccrypt_buffer_t* pubsignkey_buffer);
 
 /**
  * The parser options callback structure is used to manage callbacks needed to
@@ -146,14 +183,18 @@ typedef struct vccert_parser_options
     /* the crypto suite to use for this parser. */
     vccrypt_suite_options_t* crypto_suite;
 
-    /* entity resolver */
-    vccert_parser_entity_resolver_t parser_options_entity_resolver;
+    /* transaction resolver */
+    vccert_parser_transaction_resolver_t parser_options_transaction_resolver;
 
-    /* entity state resolver */
-    vccert_parser_entity_state_resolver_t parser_options_entity_state_resolver;
+    /* artifact state resolver */
+    vccert_parser_artifact_state_resolver_t
+        parser_options_artifact_state_resolver;
 
     /* contract resolver */
     vccert_parser_contract_resolver_t parser_options_contract_resolver;
+
+    /* entity public key resolver */
+    vccert_parser_entity_key_resolver_t parser_options_entity_key_resolver;
 
     /**
      * Options-specific context.
@@ -193,9 +234,11 @@ typedef struct vccert_parser_context
  * \param options           The options structure to initialize.
  * \param alloc_opts        The allocator options to use for this structure.
  * \param crypto_suite      The crypto suite to use for this structure.
- * \param entity_resolver   The entity resolver to use for this structure.
- * \param entity_state      The entity state resolver to use for this structure.
+ * \param txn_resolver      The transaction resolver to use for this structure.
+ * \param artifact_state    The artifact state resolver to use for this
+ *                          structure.
  * \param contract_resolver The contract resolver to use for this structure.
+ * \param key_resolver      The entity key resolver to use for this structure.
  * \param context           The user-specific context to use for this structure.
  *
  * \returns 0 on success and non-zero on failure.
@@ -203,9 +246,10 @@ typedef struct vccert_parser_context
 int vccert_parser_options_init(
     vccert_parser_options_t* options, allocator_options_t* alloc_opts,
     vccrypt_suite_options_t* crypto_suite,
-    vccert_parser_entity_resolver_t entity_resolver,
-    vccert_parser_entity_state_resolver_t entity_state,
-    vccert_parser_contract_resolver_t contract_resolver, void* context);
+    vccert_parser_transaction_resolver_t txn_resolver,
+    vccert_parser_artifact_state_resolver_t artifact_state,
+    vccert_parser_contract_resolver_t contract_resolver,
+    vccert_parser_entity_key_resolver_t key_resolver, void* context);
 
 /**
  * Initialize a parser context structure using the given options.
@@ -226,10 +270,11 @@ int vccert_parser_init(
  *
  * \param context           The parser context structure holding the certificate
  *                          on which attestation should be performed.
+ * \param height            The current height of the blockchani.
  *
  * \returns 0 on success and non-zero on failure.
  */
-int vccert_parser_attest(vccert_parser_context_t* context);
+int vccert_parser_attest(vccert_parser_context_t* context, uint64_t height);
 
 /**
  * Return the first field in the certificate.  If the certificate has not been

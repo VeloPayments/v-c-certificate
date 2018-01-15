@@ -24,9 +24,11 @@ static void vccert_parser_options_dispose(void* options);
  * \param options           The options structure to initialize.
  * \param alloc_opts        The allocator options to use for this structure.
  * \param crypto_suite      The crypto suite to use for this structure.
- * \param entity_resolver   The entity resolver to use for this structure.
- * \param entity_state      The entity state resolver to use for this structure.
+ * \param txn_resolver      The transaction resolver to use for this structure.
+ * \param artifact_state    The artifact state resolver to use for this
+ *                          structure.
  * \param contract_resolver The contract resolver to use for this structure.
+ * \param key_resolver      The entity key resolver to use for this structure.
  * \param context           The user-specific context to use for this structure.
  *
  * \returns 0 on success and non-zero on failure.
@@ -34,18 +36,20 @@ static void vccert_parser_options_dispose(void* options);
 int vccert_parser_options_init(
     vccert_parser_options_t* options, allocator_options_t* alloc_opts,
     vccrypt_suite_options_t* crypto_suite,
-    vccert_parser_entity_resolver_t entity_resolver,
-    vccert_parser_entity_state_resolver_t entity_state,
-    vccert_parser_contract_resolver_t contract_resolver, void* context)
+    vccert_parser_transaction_resolver_t txn_resolver,
+    vccert_parser_artifact_state_resolver_t artifact_state,
+    vccert_parser_contract_resolver_t contract_resolver,
+    vccert_parser_entity_key_resolver_t key_resolver, void* context)
 {
     MODEL_ASSERT(options != NULL);
     MODEL_ASSERT(alloc_opts != NULL);
     MODEL_ASSERT(crypto_suite != NULL);
-    MODEL_ASSERT(entity_resolver != NULL);
-    MODEL_ASSERT(entity_state != NULL);
+    MODEL_ASSERT(txn_resolver != NULL);
+    MODEL_ASSERT(artifact_state != NULL);
     MODEL_ASSERT(contract_resolver != NULL);
+    MODEL_ASSERT(key_resolver != NULL);
 
-    if (options == NULL || alloc_opts == NULL || crypto_suite == NULL || entity_resolver == NULL || entity_state == NULL || contract_resolver == NULL)
+    if (options == NULL || alloc_opts == NULL || crypto_suite == NULL || txn_resolver == NULL || artifact_state == NULL || contract_resolver == NULL || key_resolver == NULL)
     {
         return 1;
     }
@@ -53,9 +57,10 @@ int vccert_parser_options_init(
     options->hdr.dispose = &vccert_parser_options_dispose;
     options->alloc_opts = alloc_opts;
     options->crypto_suite = crypto_suite;
-    options->parser_options_entity_resolver = entity_resolver;
-    options->parser_options_entity_state_resolver = entity_state;
+    options->parser_options_transaction_resolver = txn_resolver;
+    options->parser_options_artifact_state_resolver = artifact_state;
     options->parser_options_contract_resolver = contract_resolver;
+    options->parser_options_entity_key_resolver = key_resolver;
     options->context = context;
 
     /* success */
