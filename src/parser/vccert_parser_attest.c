@@ -20,10 +20,13 @@
  * \param context           The parser context structure holding the certificate
  *                          on which attestation should be performed.
  * \param height            The current height of the blockchani.
+ * \param verifyContract    Set to true if the contract for the given
+ *                          transaction should be verified.
  *
  * \returns 0 on success and non-zero on failure.
  */
-int vccert_parser_attest(vccert_parser_context_t* context, uint64_t height)
+int vccert_parser_attest(
+    vccert_parser_context_t* context, uint64_t height, bool verifyContract)
 {
     int retval = 1;
 
@@ -130,6 +133,20 @@ int vccert_parser_attest(vccert_parser_context_t* context, uint64_t height)
         goto sign_dispose;
     }
 
+    /* Adjust the size to include only what has been verified through
+     * attestation.  Any fields past this point are outside of the signature and
+     * cannot be trusted. An attacker can't append values to the end of an
+     * otherwise valid certificate and fool the parser into trusting them. */
+    context->size = (signature - context->cert) -
+        FIELD_TYPE_SIZE - FIELD_SIZE_SIZE;
+
+    /* short circuit if contract verification is not required */
+    if (!verifyContract)
+    {
+        retval = PARSER_ATTEST_SUCCESS;
+        goto sign_dispose;
+    }
+
     /* get the transaction type id */
     const uint8_t* txn_type;
     size_t txn_type_size;
@@ -155,13 +172,6 @@ int vccert_parser_attest(vccert_parser_context_t* context, uint64_t height)
         retval = PARSER_ATTEST_ERROR_MISSING_ARTIFACT_ID;
         goto sign_dispose;
     }
-
-    /* Adjust the size to include only what has been verified through
-     * attestation.  Any fields past this point are outside of the signature and
-     * cannot be trusted. An attacker can't append values to the end of an
-     * otherwise valid certificate and fool the parser into trusting them. */
-    context->size = (signature - context->cert) -
-        FIELD_TYPE_SIZE - FIELD_SIZE_SIZE;
 
     /* lookup the contract function */
     vccert_contract_fn_t contract =

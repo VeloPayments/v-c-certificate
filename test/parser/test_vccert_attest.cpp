@@ -23,6 +23,8 @@ static bool dummy_entity_key_resolver(
     vccrypt_buffer_t*);
 static vccert_contract_fn_t dummy_contract_resolver(
     void*, void*, const uint8_t*, const uint8_t*);
+static vccert_contract_fn_t fail_contract_resolver(
+    void*, void*, const uint8_t*, const uint8_t*);
 
 #if 0
 static const uint8_t* PRIVATE_KEY = (const uint8_t*)
@@ -156,7 +158,27 @@ TEST_F(vccert_parser_attest_test, happy_path)
     ASSERT_EQ(TEST_CERT_SIZE, parser.size);
 
     //attestation should succeed
-    ASSERT_EQ(0, vccert_parser_attest(&parser, 77));
+    ASSERT_EQ(0, vccert_parser_attest(&parser, 77, true));
+
+    //the new size should exclude the signature field.
+    ASSERT_EQ(TEST_CERT_SIZE, parser.raw_size);
+    ASSERT_EQ(TEST_CERT_SIZE - 68, parser.size);
+}
+
+/**
+ * Demonstrate that contract validation can be bypassed.
+ */
+TEST_F(vccert_parser_attest_test, bypass_contract)
+{
+    //the size and raw size should be the same
+    ASSERT_EQ(TEST_CERT_SIZE, parser.raw_size);
+    ASSERT_EQ(TEST_CERT_SIZE, parser.size);
+
+    //switch contract resolver to something that always returns a fail contract.
+    parser.options->parser_options_contract_resolver = &fail_contract_resolver;
+
+    //attestation should succeed
+    ASSERT_EQ(0, vccert_parser_attest(&parser, 77, false));
 
     //the new size should exclude the signature field.
     ASSERT_EQ(TEST_CERT_SIZE, parser.raw_size);
@@ -198,10 +220,19 @@ static bool dummy_entity_key_resolver(
 /**
  * Dummy contract.
  */
-bool dummy_contract(
+static bool dummy_contract(
     vccert_parser_options_t*, vccert_parser_context_t*)
 {
     return true;
+}
+
+/**
+ * Fail contract.
+ */
+static bool fail_contract(
+    vccert_parser_options_t*, vccert_parser_context_t*)
+{
+    return false;
 }
 
 /**
@@ -211,4 +242,13 @@ static vccert_contract_fn_t dummy_contract_resolver(
     void*, void*, const uint8_t*, const uint8_t*)
 {
     return &dummy_contract;
+}
+
+/**
+ * Fail contract resolver.
+ */
+static vccert_contract_fn_t fail_contract_resolver(
+    void*, void*, const uint8_t*, const uint8_t*)
+{
+    return &fail_contract;
 }

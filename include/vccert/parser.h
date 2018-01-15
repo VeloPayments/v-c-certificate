@@ -271,10 +271,13 @@ int vccert_parser_init(
  * \param context           The parser context structure holding the certificate
  *                          on which attestation should be performed.
  * \param height            The current height of the blockchani.
+ * \param verifyContract    Set to true if the contract for the given
+ *                          transaction should be verified.
  *
  * \returns 0 on success and non-zero on failure.
  */
-int vccert_parser_attest(vccert_parser_context_t* context, uint64_t height);
+int vccert_parser_attest(
+    vccert_parser_context_t* context, uint64_t height, bool verifyContract);
 
 /**
  * Return the first field in the certificate.  If the certificate has not been
