@@ -48,42 +48,42 @@ int vccert_parser_attest(
     /* First, we need to get the UUID of the signer. */
     const uint8_t* signer_uuid;
     size_t signer_uuid_size;
-    if (0 !=
+    if (VCCERT_STATUS_SUCCESS !=
             vccert_parser_find_short(
                 context, VCCERT_FIELD_TYPE_SIGNER_ID, &signer_uuid,
                 &signer_uuid_size) ||
         16 != signer_uuid_size)
     {
-        return PARSER_ATTEST_ERROR_MISSING_SIGNER_UUID;
+        return VCCERT_ERROR_PARSER_ATTEST_MISSING_SIGNER_UUID;
     }
 
     /* Now, we need the signature. */
     const uint8_t* signature;
     size_t signature_size;
-    if (0 !=
+    if (VCCERT_STATUS_SUCCESS !=
             vccert_parser_find_short(
                 context, VCCERT_FIELD_TYPE_SIGNATURE, &signature, &signature_size) ||
         context->options->crypto_suite->sign_opts.signature_size != signature_size)
     {
-        return PARSER_ATTEST_ERROR_MISSING_SIGNATURE;
+        return VCCERT_ERROR_PARSER_ATTEST_MISSING_SIGNATURE;
     }
 
     /* Allocate a buffer for the signing entity's public signing key. */
     vccrypt_buffer_t public_key_buffer;
-    if (0 !=
+    if (VCCERT_STATUS_SUCCESS !=
         vccrypt_suite_buffer_init_for_signature_public_key(
             context->options->crypto_suite, &public_key_buffer))
     {
-        return PARSER_ATTEST_ERROR_GENERAL;
+        return VCCERT_ERROR_PARSER_ATTEST_GENERAL;
     }
 
     /* Allocate a buffer for the signing entity's public encryption key.  */
     vccrypt_buffer_t public_enc_key_buffer;
-    if (0 !=
+    if (VCCERT_STATUS_SUCCESS !=
         vccrypt_suite_buffer_init_for_cipher_key_agreement_public_key(
             context->options->crypto_suite, &public_enc_key_buffer))
     {
-        retval = PARSER_ATTEST_ERROR_GENERAL;
+        retval = VCCERT_ERROR_PARSER_ATTEST_GENERAL;
         goto public_key_buffer_dispose;
     }
 
@@ -94,7 +94,7 @@ int vccert_parser_attest(
             context->options, context, height, signer_uuid,
             &public_enc_key_buffer, &public_key_buffer))
     {
-        retval = PARSER_ATTEST_ERROR_MISSING_SIGNING_CERT;
+        retval = VCCERT_ERROR_PARSER_ATTEST_MISSING_SIGNING_CERT;
         goto public_enc_key_buffer_dispose;
     }
 
@@ -104,32 +104,32 @@ int vccert_parser_attest(
 
     /* Create a buffer for the signature. */
     vccrypt_buffer_t signature_buffer;
-    if (0 !=
+    if (VCCERT_STATUS_SUCCESS !=
         vccrypt_suite_buffer_init_for_signature(
             context->options->crypto_suite, &signature_buffer))
     {
-        retval = PARSER_ATTEST_ERROR_GENERAL;
+        retval = VCCERT_ERROR_PARSER_ATTEST_GENERAL;
         goto public_enc_key_buffer_dispose;
     }
     memcpy(signature_buffer.data, signature, signature_buffer.size);
 
     /* Create a digital signature context */
     vccrypt_digital_signature_context_t sign;
-    if (0 !=
+    if (VCCERT_STATUS_SUCCESS !=
         vccrypt_suite_digital_signature_init(
             context->options->crypto_suite, &sign))
     {
-        retval = PARSER_ATTEST_ERROR_GENERAL;
+        retval = VCCERT_ERROR_PARSER_ATTEST_GENERAL;
         goto signature_buffer_dispose;
     }
 
     /* verify the signature for this certificate */
-    if (0 !=
+    if (VCCERT_STATUS_SUCCESS !=
         vccrypt_digital_signature_verify(
             &sign, &signature_buffer, &public_key_buffer, context->cert,
             signature - context->cert))
     {
-        retval = PARSER_ATTEST_ERROR_SIGNATURE_MISMATCH;
+        retval = VCCERT_ERROR_PARSER_ATTEST_SIGNATURE_MISMATCH;
         goto sign_dispose;
     }
 
@@ -143,33 +143,33 @@ int vccert_parser_attest(
     /* short circuit if contract verification is not required */
     if (!verifyContract)
     {
-        retval = PARSER_ATTEST_SUCCESS;
+        retval = VCCERT_STATUS_SUCCESS;
         goto sign_dispose;
     }
 
     /* get the transaction type id */
     const uint8_t* txn_type;
     size_t txn_type_size;
-    if (0 !=
+    if (VCCERT_STATUS_SUCCESS !=
             vccert_parser_find_short(
                 context, VCCERT_FIELD_TYPE_TRANSACTION_TYPE, &txn_type,
                 &txn_type_size) ||
         16 != txn_type_size)
     {
-        retval = PARSER_ATTEST_ERROR_MISSING_TRANSACTION_TYPE;
+        retval = VCCERT_ERROR_PARSER_ATTEST_MISSING_TRANSACTION_TYPE;
         goto sign_dispose;
     }
 
     /* get the artifact id */
     const uint8_t* artifact_id;
     size_t artifact_id_size;
-    if (0 !=
+    if (VCCERT_STATUS_SUCCESS !=
             vccert_parser_find_short(
                 context, VCCERT_FIELD_TYPE_TRANSACTION_TYPE, &artifact_id,
                 &artifact_id_size) ||
         16 != artifact_id_size)
     {
-        retval = PARSER_ATTEST_ERROR_MISSING_ARTIFACT_ID;
+        retval = VCCERT_ERROR_PARSER_ATTEST_MISSING_ARTIFACT_ID;
         goto sign_dispose;
     }
 
@@ -179,19 +179,19 @@ int vccert_parser_attest(
             context->options, context, txn_type, artifact_id);
     if (contract == NULL)
     {
-        retval = PARSER_ATTEST_ERROR_MISSING_CONTRACT;
+        retval = VCCERT_ERROR_PARSER_ATTEST_MISSING_CONTRACT;
         goto sign_dispose;
     }
 
     /* execute the contract to verify this transaction. */
     if (!(*contract)(context->options, context))
     {
-        retval = PARSER_ATTEST_ERROR_CONTRACT_VERIFICATION;
+        retval = VCCERT_ERROR_PARSER_ATTEST_CONTRACT_VERIFICATION;
         goto sign_dispose;
     }
 
     /* At this point, the certificate chain has been attested. */
-    retval = PARSER_ATTEST_SUCCESS;
+    retval = VCCERT_STATUS_SUCCESS;
 
 sign_dispose:
     dispose((disposable_t*)&sign);

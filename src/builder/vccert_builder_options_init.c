@@ -37,7 +37,7 @@ int vccert_builder_options_init(
     /* parameter sanity check */
     if (options == NULL || alloc_opts == NULL || crypto_suite == NULL)
     {
-        return 1;
+        return VCCERT_ERROR_BUILDER_OPTIONS_INIT_INVALID_ARG;
     }
 
     options->hdr.dispose = &vccert_builder_options_dispose;
@@ -45,7 +45,7 @@ int vccert_builder_options_init(
     options->crypto_suite = crypto_suite;
 
     /* success */
-    return 0;
+    return VCCERT_STATUS_SUCCESS;
 }
 
 /**

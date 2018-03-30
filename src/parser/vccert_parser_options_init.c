@@ -51,7 +51,7 @@ int vccert_parser_options_init(
 
     if (options == NULL || alloc_opts == NULL || crypto_suite == NULL || txn_resolver == NULL || artifact_state == NULL || contract_resolver == NULL || key_resolver == NULL)
     {
-        return 1;
+        return VCCERT_ERROR_PARSER_OPTIONS_INIT_INVALID_ARG;
     }
 
     options->hdr.dispose = &vccert_parser_options_dispose;
@@ -64,7 +64,7 @@ int vccert_parser_options_init(
     options->context = context;
 
     /* success */
-    return 0;
+    return VCCERT_STATUS_SUCCESS;
 }
 
 /**

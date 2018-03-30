@@ -53,7 +53,7 @@ int vccert_parser_field(
         || field == NULL /* output sanity */
         || next_offset == NULL) /* output sanity */
     {
-        return 1;
+        return VCCERT_ERROR_PARSER_FIELD_INVALID_ARG;
     }
 
     /* the field type is a big-Endian 16-bit number */
@@ -68,7 +68,7 @@ int vccert_parser_field(
         /* nonsense size.  We can't have a field that extends past the end of
          * the certificate.
          */
-        return 1;
+        return VCCERT_ERROR_PARSER_FIELD_INVALID_FIELD_SIZE;
     }
 
     /* the field value starts immediately after the field type and field size
@@ -86,5 +86,5 @@ int vccert_parser_field(
     *next_offset = offset + FIELD_TYPE_SIZE + FIELD_SIZE_SIZE + *field_size;
 
     /* success */
-    return 0;
+    return VCCERT_STATUS_SUCCESS;
 }

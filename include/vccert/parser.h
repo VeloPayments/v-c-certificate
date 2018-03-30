@@ -14,6 +14,7 @@
 
 #include <stdbool.h>
 #include <stdint.h>
+#include <vccert/error_codes.h>
 #include <vccrypt/suite.h>
 #include <vpr/allocator.h>
 #include <vpr/disposable.h>
@@ -32,20 +33,6 @@ struct vccert_parser_options;
 
 /* forward declaration for parser context. */
 struct vccert_parser_context;
-
-#define PARSER_ATTEST_SUCCESS 0x0000
-#define PARSER_ATTEST_ERROR_MISSING_SIGNER_UUID 0x1002
-#define PARSER_ATTEST_ERROR_MISSING_SIGNATURE 0x1003
-#define PARSER_ATTEST_ERROR_MISSING_SIGNING_CERT 0x1004
-#define PARSER_ATTEST_ERROR_CHAIN_ATTESTATION 0x1005
-#define PARSER_ATTEST_ERROR_SIGNER_UUID_MISMATCH 0x1006
-#define PARSER_ATTEST_ERROR_SIGNER_MISSING_SIGNING_KEY 0x1007
-#define PARSER_ATTEST_ERROR_SIGNATURE_MISMATCH 0x1008
-#define PARSER_ATTEST_ERROR_MISSING_CONTRACT 0x1009
-#define PARSER_ATTEST_ERROR_CONTRACT_VERIFICATION 0x100A
-#define PARSER_ATTEST_ERROR_MISSING_TRANSACTION_TYPE 0x100B
-#define PARSER_ATTEST_ERROR_MISSING_ARTIFACT_ID 0x100C
-#define PARSER_ATTEST_ERROR_GENERAL 0x1101
 
 /**
  * Contract function pointer.

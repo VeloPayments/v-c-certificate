@@ -48,15 +48,15 @@ int vccert_parser_field_next(
         (*value - context->cert) - (FIELD_TYPE_SIZE + FIELD_SIZE_SIZE);
     if (offset > context->size)
     {
-        return 1;
+        return VCCERT_ERROR_PARSER_FIELD_NEXT_INVALID_FIELD_SIZE;
     }
 
     /* get the next field offset */
-    if (0 !=
+    if (VCCERT_STATUS_SUCCESS !=
         vccert_parser_field(context->cert, context->size, offset, field_id,
             size, value, &offset))
     {
-        return 2;
+        return VCCERT_ERROR_PARSER_FIELD_NEXT_FIELD_NOT_FOUND;
     }
 
     /* parse the next field */

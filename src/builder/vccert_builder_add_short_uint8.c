@@ -32,7 +32,7 @@ int vccert_builder_add_short_uint8(
 
     if (context == NULL || context->buffer.data == NULL || context->buffer.size < context->offset + field_size)
     {
-        return 1;
+        return VCCERT_ERROR_BUILDER_ADD_INVALID_ARG;
     }
 
     //write field header
@@ -45,5 +45,5 @@ int vccert_builder_add_short_uint8(
     //increment the offset
     context->offset += sizeof(value);
 
-    return 0;
+    return VCCERT_STATUS_SUCCESS;
 }

@@ -52,7 +52,7 @@ int vccert_parser_find_short(
         if (found_id == field_id)
             break;
 
-    } while (retval == 0);
+    } while (retval == VCCERT_STATUS_SUCCESS);
 
     /* did we find a valid field? */
     if (retval != 0 || found_id != field_id)

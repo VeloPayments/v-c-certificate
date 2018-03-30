@@ -47,15 +47,15 @@ int vccert_parser_find_next(
         (*value - context->cert) - (FIELD_TYPE_SIZE + FIELD_SIZE_SIZE);
     if (offset > context->size)
     {
-        return 1;
+        return VCCERT_ERROR_PARSER_FIND_NEXT_INVALID_FIELD_SIZE;
     }
 
     /* get the next field offset */
-    if (0 !=
+    if (VCCERT_STATUS_SUCCESS !=
         vccert_parser_field(context->cert, context->size, offset, &field_id,
             size, value, &offset))
     {
-        return 2;
+        return VCCERT_ERROR_PARSER_FIND_NEXT_FIELD_NOT_FOUND;
     }
 
     /* search through all fields for a matching occurrence. */
@@ -68,14 +68,14 @@ int vccert_parser_find_next(
         if (found_id == field_id)
             break;
 
-    } while (retval == 0);
+    } while (retval == VCCERT_STATUS_SUCCESS);
 
     /* did we find a valid field? */
-    if (retval != 0 || found_id != field_id)
+    if (retval != VCCERT_STATUS_SUCCESS || found_id != field_id)
     {
         *size = 0;
         *value = NULL;
-        retval = 1;
+        retval = VCCERT_ERROR_PARSER_FIND_NEXT_FIELD_NOT_FOUND;
     }
 
     return retval;

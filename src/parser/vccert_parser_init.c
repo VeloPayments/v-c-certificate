@@ -38,7 +38,7 @@ int vccert_parser_init(
 
     if (options == NULL || context == NULL || cert == NULL || size == 0)
     {
-        return 1;
+        return VCCERT_ERROR_PARSER_INIT_INVALID_ARG;
     }
 
     /* front matter for this context structure */
@@ -62,7 +62,7 @@ int vccert_parser_init(
     context->parent = NULL;
 
     /* success */
-    return 0;
+    return VCCERT_STATUS_SUCCESS;
 }
 
 /**

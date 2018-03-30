@@ -37,7 +37,7 @@ int vccert_builder_init(
     /* parameter sanity check */
     if (options == NULL || options->alloc_opts == NULL || options == NULL || size == 0)
     {
-        return 1;
+        return VCCERT_ERROR_BUILDER_INIT_INVALID_ARG;
     }
 
     /* initialize the context */

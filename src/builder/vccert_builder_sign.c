@@ -30,7 +30,7 @@ int vccert_builder_sign(
     vccert_builder_context_t* context, const uint8_t* signer_id,
     const vccrypt_buffer_t* private_key)
 {
-    int retval = BUILDER_SIGN_ERROR_UNKNOWN;
+    int retval = VCCERT_STATUS_SUCCESS;
 
     /* parameter sanity check */
     MODEL_ASSERT(context != NULL);
@@ -39,7 +39,7 @@ int vccert_builder_sign(
     MODEL_ASSERT(context->buffer.data != NULL);
     if (context == NULL || context->options == NULL || context->options->crypto_suite == NULL || context->buffer.data == NULL)
     {
-        return BUILDER_SIGN_ERROR_GENERAL;
+        return VCCERT_ERROR_BUILDER_SIGN_INVALID_ARG;
     }
 
     /* buffer size check */
@@ -49,20 +49,24 @@ int vccert_builder_sign(
     MODEL_ASSERT(context->buffer.size >= context->offset + field_size);
     if (context->buffer.size < context->offset + field_size)
     {
-        return BUILDER_SIGN_ERROR_GENERAL;
+        return VCCERT_ERROR_BUILDER_SIGN_INVALID_FIELD_SIZE;
     }
 
     /* write the signer ID */
-    if (0 != vccert_builder_add_short_UUID(context, VCCERT_FIELD_TYPE_SIGNER_ID, signer_id))
+    retval = vccert_builder_add_short_UUID(
+        context, VCCERT_FIELD_TYPE_SIGNER_ID, signer_id);
+    if (VCCERT_STATUS_SUCCESS != retval)
     {
-        return BUILDER_SIGN_ERROR_GENERAL;
+        return retval;
     }
 
     /* create a buffer for the signature */
     vccrypt_buffer_t signature;
-    if (0 != vccrypt_suite_buffer_init_for_signature(context->options->crypto_suite, &signature))
+    retval = vccrypt_suite_buffer_init_for_signature(
+        context->options->crypto_suite, &signature);
+    if (VCCERT_STATUS_SUCCESS != retval)
     {
-        return BUILDER_SIGN_ERROR_GENERAL;
+        return retval;
     }
 
     /* write signature field header */
@@ -71,16 +75,19 @@ int vccert_builder_sign(
 
     /* create the digital signature context */
     vccrypt_digital_signature_context_t sign;
-    if (0 != vccrypt_suite_digital_signature_init(context->options->crypto_suite, &sign))
+    retval = vccrypt_suite_digital_signature_init(
+        context->options->crypto_suite, &sign);
+    if (VCCERT_STATUS_SUCCESS != retval)
     {
-        retval = BUILDER_SIGN_ERROR_GENERAL;
         goto dispose_signature;
     }
 
     /* sign the certificate */
-    if (0 != vccrypt_digital_signature_sign(&sign, &signature, private_key, (const uint8_t*)context->buffer.data, context->offset))
+    retval = vccrypt_digital_signature_sign(
+        &sign, &signature, private_key,
+        (const uint8_t*)context->buffer.data, context->offset);
+    if (VCCERT_STATUS_SUCCESS != retval)
     {
-        retval = BUILDER_SIGN_ERROR_GENERAL;
         goto dispose_sign_context;
     }
 
@@ -91,7 +98,7 @@ int vccert_builder_sign(
     /* increment the offset */
     context->offset += signature.size;
 
-    retval = BUILDER_SIGN_SUCCESS;
+    retval = VCCERT_STATUS_SUCCESS;
 
 dispose_sign_context:
     dispose((disposable_t*)&sign);
