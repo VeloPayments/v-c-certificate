@@ -1,9 +1,10 @@
 /**
  * \file fields.h
  *
- * This header defines the bulit-in fields defined for Velo Certificates.  Velo
- * reserves the first 1024 field types (0x0000 - 0x03FF) for use as short field
- * codes.  This header is where they are officially defined.
+ * \brief This header defines the built-in fields defined for Velo Certificates.
+ *
+ * Velo reserves the first 1024 field types (0x0000 - 0x03FF) for use as short
+ * field codes.  This header is where they are officially defined.
  *
  * Unless otherwise specified, all integer values are serialized in network
  * format (Big Endian).
@@ -20,18 +21,28 @@ extern "C" {
 #endif  //__cplusplus
 
 /**
- * This enumeration defines all fields that are reserved in Velo.  It also
- * includes field code ranges that are meaningful for other purposes.
+ * \brief This enumeration defines all fields that are reserved in Velo.
+ *
+ * It also includes field code ranges that are meaningful for other purposes.
  */
 typedef enum vccert_field_type
 {
-    /* Begin of the pre-defined short field codes range. */
+    /**
+     * \brief Begin of the pre-defined short field codes range.
+     */
     VCCERT_FIELD_TYPE_VELO_RESERVED_BEGIN = 0x0000,
 
-    /* Reserved Zero-Tag. */
+    /**
+     * \brief Reserved Zero-Tag.
+     */
     VCCERT_FIELD_TYPE_RESERVED_ZERO_TAG = 0x0000,
-    /* Certificate Format Version. Unsigned 32-bit Big-Endian. */
+    /**
+     * \brief Certificate Format Version.
+     *
+     * Unsigned 32-bit Big-Endian.
+     */
     VCCERT_FIELD_TYPE_CERTIFICATE_VERSION = 0x0001,
+
     /* Reserved fields */
     VCCERT_FIELD_TYPE_VELO_RESERVED_0002 = 0x0002,
     VCCERT_FIELD_TYPE_VELO_RESERVED_0003 = 0x0003,
@@ -48,12 +59,20 @@ typedef enum vccert_field_type
     VCCERT_FIELD_TYPE_VELO_RESERVED_000E = 0x000E,
     VCCERT_FIELD_TYPE_VELO_RESERVED_000F = 0x000F,
 
-    /* Certificate valid from date (uint64_t seconds from Jan-01-1970) */
+    /**
+     * \brief Certificate valid from date.
+     *
+     * \ref uint64_t seconds from Jan-01-1970.
+     */
     VCCERT_FIELD_TYPE_CERTIFICATE_VALID_FROM = 0x0010,
-    /* Certificate valid to date (uint64_t seconds from Jan-01-1970) */
+    /**
+     * \brief Certificate valid to date.
+     *
+     * \ref uint64_t seconds from Jan-01-1970.
+     */
     VCCERT_FIELD_TYPE_CERTIFICATE_VALID_TO = 0x0011,
 
-    /* reserved fields */
+    /* Reserved fields */
     VCCERT_FIELD_TYPE_VELO_RESERVED_0012 = 0x0012,
     VCCERT_FIELD_TYPE_VELO_RESERVED_0013 = 0x0013,
     VCCERT_FIELD_TYPE_VELO_RESERVED_0014 = 0x0014,
@@ -69,9 +88,14 @@ typedef enum vccert_field_type
     VCCERT_FIELD_TYPE_VELO_RESERVED_001E = 0x001E,
     VCCERT_FIELD_TYPE_VELO_RESERVED_001F = 0x001F,
 
-    /* Certificate Crypto Suite. (uint16_t identifier) */
+    /**
+     * \brief Certificate Crypto Suite.
+     *
+     * uint16_t identifier.
+     */
     VCCERT_FIELD_TYPE_CERTIFICATE_CRYPTO_SUITE = 0x0020,
-    /* reserved fields */
+
+    /* Reserved fields */
     VCCERT_FIELD_TYPE_VELO_RESERVED_0021 = 0x0021,
     VCCERT_FIELD_TYPE_VELO_RESERVED_0022 = 0x0022,
     VCCERT_FIELD_TYPE_VELO_RESERVED_0023 = 0x0023,
@@ -88,8 +112,13 @@ typedef enum vccert_field_type
     VCCERT_FIELD_TYPE_VELO_RESERVED_002E = 0x002E,
     VCCERT_FIELD_TYPE_VELO_RESERVED_002F = 0x002F,
 
-    /* Certificate Type. (128-bit UUID) */
+    /**
+     * \brief Certificate Type.
+     *
+     * 128-bit UUID.
+     */
     VCCERT_FIELD_TYPE_CERTIFICATE_TYPE = 0x0030,
+
     /* reserved fields */
     VCCERT_FIELD_TYPE_VELO_RESERVED_0031 = 0x0031,
     VCCERT_FIELD_TYPE_VELO_RESERVED_0032 = 0x0032,
@@ -98,12 +127,26 @@ typedef enum vccert_field_type
     VCCERT_FIELD_TYPE_VELO_RESERVED_0035 = 0x0035,
     VCCERT_FIELD_TYPE_VELO_RESERVED_0036 = 0x0036,
     VCCERT_FIELD_TYPE_VELO_RESERVED_0037 = 0x0037,
-    /* Certificate ID.  UUID. */
+
+    /**
+     * \brief Certificate ID.
+     *
+     * 128-bit UUID.
+     */
     VCCERT_FIELD_TYPE_CERTIFICATE_ID = 0x0038,
-    /* Previous Certificate ID.  UUID. */
+    /**
+     * \brief Previous Certificate ID.
+     *
+     * 128-bit UUID.
+     */
     VCCERT_FIELD_TYPE_PREVIOUS_CERTIFICATE_ID = 0x0039,
-    /* Next Certificate ID.  UUID. */
+    /**
+     * \brief Next Certificate ID.
+     *
+     * 128-bit UUID.
+     */
     VCCERT_FIELD_TYPE_NEXT_CERTIFICATE_ID = 0x003A,
+
     /* reserved fields */
     VCCERT_FIELD_TYPE_VELO_RESERVED_003B = 0x003B,
     VCCERT_FIELD_TYPE_VELO_RESERVED_003C = 0x003C,
@@ -111,13 +154,31 @@ typedef enum vccert_field_type
     VCCERT_FIELD_TYPE_VELO_RESERVED_003E = 0x003E,
     VCCERT_FIELD_TYPE_VELO_RESERVED_003F = 0x003F,
 
-    /* Artifact Type. (128-bit UUID) */
+    /**
+     * \brief Artifact Type.
+     *
+     * 128-bit UUID.
+     */
     VCCERT_FIELD_TYPE_ARTIFACT_TYPE = 0x0040,
-    /* Artifact ID. (128-bit UUID) */
+    /**
+     * \brief Artifact ID.
+     *
+     * 128-bit UUID.
+     */
     VCCERT_FIELD_TYPE_ARTIFACT_ID = 0x0041,
-
+    /**
+     * \brief Artifact State.
+     *
+     * 16-bit unsigned integer.
+     */
     VCCERT_FIELD_TYPE_PREVIOUS_ARTIFACT_STATE = 0x0042,
+    /**
+     * \brief Artifact State.
+     *
+     * 16-bit unsigned integer.
+     */
     VCCERT_FIELD_TYPE_NEW_ARTIFACT_STATE = 0x0043,
+
     /* reserved fields */
     VCCERT_FIELD_TYPE_VELO_RESERVED_0044 = 0x0044,
     VCCERT_FIELD_TYPE_VELO_RESERVED_0045 = 0x0045,
@@ -132,18 +193,43 @@ typedef enum vccert_field_type
     VCCERT_FIELD_TYPE_VELO_RESERVED_004E = 0x004E,
     VCCERT_FIELD_TYPE_VELO_RESERVED_004F = 0x004F,
 
-    /* Signer ID. (128-bit UUID) */
+    /**
+     * \brief Signer ID.
+     *
+     * 128-bit UUID.
+     */
     VCCERT_FIELD_TYPE_SIGNER_ID = 0x0050,
-    /* Signature. (Crypto Suite Dependent Length and Content) */
+    /**
+     * \brief Signature.
+     *
+     * Crypto Suite Dependent Length and Content.
+     */
     VCCERT_FIELD_TYPE_SIGNATURE = 0x0051,
-    /* Public Encryption Key (Crypto Suite Dependent Length and Content) */
+    /**
+     * \brief Public Encryption Key.
+     *
+     * Crypto Suite Dependent Length and Content.
+     */
     VCCERT_FIELD_TYPE_PUBLIC_ENCRYPTION_KEY = 0x0052,
-    /* Public Signing Key (Crypto Suite Dependent Length and Content) */
+    /**
+     * \brief Public Signing Key.
+     *
+     * Crypto Suite Dependent Length and Content.
+     */
     VCCERT_FIELD_TYPE_PUBLIC_SIGNING_KEY = 0x0053,
-    /* Private Encryption Key (Crypto Suite Dependent Length and Content) */
+    /**
+     * \brief Private Encryption Key.
+     *
+     * Crypto Suite Dependent Length and Content.
+     */
     VCCERT_FIELD_TYPE_PRIVATE_ENCRYPTION_KEY = 0x0054,
-    /* Private Signing Key (Crypto Suite Dependent Length and Content) */
+    /**
+     * \brief Private Signing Key.
+     *
+     * Crypto Suite Dependent Length and Content.
+     */
     VCCERT_FIELD_TYPE_PRIVATE_SIGNING_KEY = 0x0055,
+
     /* reserved fields */
     VCCERT_FIELD_TYPE_VELO_RESERVED_0056 = 0x0056,
     VCCERT_FIELD_TYPE_VELO_RESERVED_0057 = 0x0057,
@@ -156,53 +242,133 @@ typedef enum vccert_field_type
     VCCERT_FIELD_TYPE_VELO_RESERVED_005E = 0x005E,
     VCCERT_FIELD_TYPE_VELO_RESERVED_005F = 0x005F,
 
-    /* Grant Descriptor Tuple */
+    /**
+     * \brief Grant Descriptor Tuple.
+     */
     VCCERT_FIELD_TYPE_GRANT_DESCRIPTOR_TUPLE = 0x0060,
-    /* Grant Description (UTF-8 characters excluding null terminator) */
+    /**
+     * \brief Grant Description.
+     *
+     * Variable-length array of UTF-8 characters excluding null terminator.
+     */
     VCCERT_FIELD_TYPE_GRANT_DESCRIPTION = 0x0061,
-    /* The expected type of the subject entity. */
+    /**
+     * \brief The expected type of the subject entity.
+     *
+     * 128-bit UUID.
+     */
     VCCERT_FIELD_TYPE_GRANT_SUBJECT_TYPE = 0x0062,
-    /* The expected type of the object artifact. */
+    /* \brief The expected type of the object artifact.
+     *
+     * 128-bit UUID.
+     */
     VCCERT_FIELD_TYPE_GRANT_OBJECT_TYPE = 0x0063,
-    /* The explicit transaction type for this grant. */
+    /* \brief The explicit transaction type for this grant.
+     *
+     * 128-bit UUID.
+     */
     VCCERT_FIELD_TYPE_GRANT_TRANSACTION_TYPE = 0x0064,
-    /* A tuple value of grant ID, subject UUID, and object UUID. */
+    /* \brief Grant Tuple.
+     *
+     * A tuple value of grant ID, subject UUID, and object UUID.
+     */
     VCCERT_FIELD_TYPE_GRANT_TUPLE = 0x0065,
-    /* UUID of the subject of a grant. */
+    /**
+     * \brief The subject of a grant.
+     *
+     * 128-bit UUID.
+     */
     VCCERT_FIELD_TYPE_GRANT_SUBJECT = 0x0066,
-    /* UUID of the object of a grant. */
+    /**
+     * \brief The object of a grant.
+     *
+     * 128-bit UUID.
+     */
     VCCERT_FIELD_TYPE_GRANT_OBJECT = 0x0067,
-    /* UUID of the first auxiliary type of a grant descriptor. */
+    /**
+     * \brief The first auxiliary type of a grant descriptor.
+     *
+     * 128-bit UUID.
+     */
     VCCERT_FIELD_TYPE_GRANT_AUXILIARY_TYPE_1 = 0x0068,
-    /* UUID of the second auxiliary type of a grant descriptor. */
+    /**
+     * \brief The second auxiliary type of a grant descriptor.
+     *
+     * 128-bit UUID.
+     */
     VCCERT_FIELD_TYPE_GRANT_AUXILIARY_TYPE_2 = 0x0069,
-    /* UUID of the third auxiliary type of a grant descriptor. */
+    /**
+     * \brief The third auxiliary type of a grant descriptor.
+     *
+     * 128-bit UUID.
+     */
     VCCERT_FIELD_TYPE_GRANT_AUXILIARY_TYPE_3 = 0x006A,
-    /* UUID of the fourth auxiliary type of a grant descriptor. */
+    /**
+     * \brief The fourth auxiliary type of a grant descriptor.
+     *
+     * 128-bit UUID.
+     */
     VCCERT_FIELD_TYPE_GRANT_AUXILIARY_TYPE_4 = 0x006B,
-    /* UUID of the first auxiliary of a grant. */
+    /**
+     * \brief The first auxiliary identifier of a grant.
+     *
+     * 128-bit UUID.
+     */
     VCCERT_FIELD_TYPE_GRANT_AUXILIARY_1 = 0x006C,
-    /* UUID of the second auxiliary of a grant. */
+    /**
+     * \brief The second auxiliary identifier of a grant.
+     *
+     * 128-bit UUID.
+     */
     VCCERT_FIELD_TYPE_GRANT_AUXILIARY_2 = 0x006D,
-    /* UUID of the third auxiliary of a grant. */
+    /**
+     * \brief The third auxiliary identifier of a grant.
+     *
+     * 128-bit UUID.
+     */
     VCCERT_FIELD_TYPE_GRANT_AUXILIARY_3 = 0x006E,
-    /* UUID of the fourth auxiliary of a grant. */
+    /**
+     * \brief The fourth auxiliary identifier of a grant.
+     *
+     * 128-bit UUID.
+     */
     VCCERT_FIELD_TYPE_GRANT_AUXILIARY_4 = 0x006F,
 
-    /* Artifact Type State Transition Tuple. */
+    /**
+     * \brief Artifact Type State Transition Tuple.
+     */
     VCCERT_FIELD_TYPE_ARTIFACT_TYPE_STATE_TRANSITION_TUPLE = 0x0070,
-    /* User Field Mapping Tuple. */
+    /**
+     * \brief User Field Mapping Tuple.
+     */
     VCCERT_FIELD_TYPE_USER_FIELD_MAPPING_TUPLE = 0x0071,
-    /* Field Mapping Tuple. */
+    /**
+     * \brief Field Mapping Tuple.
+     */
     VCCERT_FIELD_TYPE_FIELD_MAPPING_TUPLE = 0x0072,
-    /* Contract Bytecode. */
+    /**
+     * \brief Contract Bytecode.
+     */
     VCCERT_FIELD_TYPE_CONTRACT_BYTECODE = 0x0073,
-    /* Short Field Type. Unsigned 16-bit Big Endian. */
+    /**
+     * \brief Short Field Type.
+     *
+     * Unsigned 16-bit Big Endian.
+     */
     VCCERT_FIELD_TYPE_SHORT_FIELD_TYPE = 0x0074,
-    /* Long Field Type. UUID. */
+    /**
+     * \brief Long Field Type.
+     *
+     * 128-bit UUID.
+     */
     VCCERT_FIELD_TYPE_LONG_FIELD_TYPE = 0x0075,
-    /* Transaction Type UUID. */
+    /**
+     * \brief Transaction Type Identifier.
+     *
+     * 128-bit UUID.
+     */
     VCCERT_FIELD_TYPE_TRANSACTION_TYPE = 0x0076,
+
     /* reserved fields */
     VCCERT_FIELD_TYPE_VELO_RESERVED_0077 = 0x0077,
     VCCERT_FIELD_TYPE_VELO_RESERVED_0078 = 0x0078,
@@ -214,17 +380,37 @@ typedef enum vccert_field_type
     VCCERT_FIELD_TYPE_VELO_RESERVED_007E = 0x007E,
     VCCERT_FIELD_TYPE_VELO_RESERVED_007F = 0x007F,
 
-    /* Block UUID. */
+    /**
+     * \brief Block Identifier.
+     *
+     * 128-bit UUID.
+     */
     VCCERT_FIELD_TYPE_BLOCK_UUID = 0x0080,
-    /* Previous Block UUID. */
+    /**
+     * \brief Previous Block Identifier.
+     *
+     * 128-bit UUID.
+     */
     VCCERT_FIELD_TYPE_PREVIOUS_BLOCK_UUID = 0x0081,
-    /* Previous Block Hash. */
+    /**
+     * \brief Previous Block Hash.
+     *
+     * Crypto Suite Dependent Length and Content.
+     */
     VCCERT_FIELD_TYPE_PREVIOUS_BLOCK_HASH = 0x0082,
-    /* Block Height. */
+    /**
+     * \brief Block Height.
+     *
+     * Unsigned 64-bit integer.
+     */
     VCCERT_FIELD_TYPE_BLOCK_HEIGHT = 0x0083,
-    /* Wrapped Transaction Tuple. */
+    /**
+     * \brief Wrapped Transaction Tuple.
+     */
     VCCERT_FIELD_TYPE_WRAPPED_TRANSACTION_TUPLE = 0x0084,
-    /* Block Signature Tuple. */
+    /**
+     * \brief Block Signature Tuple.
+     */
     VCCERT_FIELD_TYPE_BLOCK_SIGNATURE_TUPLE = 0x0085,
 
     /* reserved fields */
@@ -1175,12 +1361,18 @@ typedef enum vccert_field_type
     VCCERT_FIELD_TYPE_VELO_RESERVED_03FE = 0x03FE,
     VCCERT_FIELD_TYPE_VELO_RESERVED_03FF = 0x03FF,
 
-    /* End of the pre-defined short field codes range. */
+    /**
+     * \brief End of the pre-defined short field codes range.
+     */
     VCCERT_FIELD_TYPE_VELO_RESERVED_END = 0x03FF,
 
-    /* Begin of long UUID field code range */
+    /**
+     * \brief Begin of long UUID field code range.
+     */
     VCCERT_FIELD_TYPE_LONG_ID_BEGIN = 0x0400,
-    /* End of long UUID field code range */
+    /**
+     * \brief End of long UUID field code range.
+     */
     VCCERT_FIELD_TYPE_LONG_ID_END = 0xFEFF,
 
     /* Reserved upper range begin */
@@ -1188,7 +1380,9 @@ typedef enum vccert_field_type
     /* Reserved upper range end */
     VCCERT_FIELD_TYPE_VELO_RESERVED_UPPER_END = 0xFFFE,
 
-    /* Invalid field type */
+    /**
+     * \brief Invalid field type.
+     */
     VCCERT_FIELD_TYPE_INVALID = 0xFFFF,
 
 } vccert_field_type_t;

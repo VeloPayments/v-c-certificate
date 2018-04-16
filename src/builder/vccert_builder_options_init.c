@@ -16,15 +16,20 @@
 static void vccert_builder_options_dispose(void* options);
 
 /**
- * Initialize a builder options structure using the given allocator, and crypto
- * suite.
- * and must be disposed of when no longer needed by calling dispose().
+ * \brief Initialize a builder options structure using the given allocator and
+ * crypto suite.
+ *
+ * This options structure is owned by the caller and must be disposed of when no
+ * longer needed by calling dispose().
  *
  * \param options           The options structure to initialize.
  * \param alloc_opts        The allocator options to use for this structure.
  * \param crypto_suite      The crypto suite to use for this structure.
  *
- * \returns 0 on success and non-zero on failure.
+ * \returns a status code indicating success or failure.
+ *      - \ref VCCERT_STATUS_SUCCESS on success.
+ *      - \ref VCCERT_ERROR_BUILDER_OPTIONS_INIT_INVALID_ARG if one of the
+ *             arguments to this method is invalid.
  */
 int vccert_builder_options_init(
     vccert_builder_options_t* options, allocator_options_t* alloc_opts,

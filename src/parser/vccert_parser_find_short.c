@@ -13,11 +13,13 @@
 #include "parser_internal.h"
 
 /**
- * Attempt to find the first occurrence of a field with the given short-hand
- * identifier in the certificate. If the certificate has not been attested, then
- * this performs an UNSAFE SEARCH of the RAW CERTIFICATE.  Run
- * vccert_parser_attest() first if you want trusted information.  Additional
- * matching fields can be found by calling vccert_parser_find_next().
+ * \brief Attempt to find the first occurrence of a field with the given
+ * short-hand identifier in the certificate.
+ *
+ * If the certificate has not been attested, then this performs an UNSAFE SEARCH
+ * of the RAW CERTIFICATE.  Run vccert_parser_attest() first if you want trusted
+ * information.  Additional matching fields can be found by calling
+ * vccert_parser_find_next().
  *
  * \param context           The parser context structure for this certificate.
  * \param field_id          The short-hand field identifier to find.
@@ -26,7 +28,17 @@
  * \param size              A pointer to receive the field size if the field is
  *                          found.
  *
- * \returns 0 on success and non-zero on failure.
+ * \returns a status code indicating success or failure.
+ *      - \ref VCCERT_STATUS_SUCCESS on success.
+ *      - \ref VCCERT_ERROR_PARSER_FIELD_NEXT_INVALID_FIELD_SIZE if a field with
+ *        an invalid size is encountered in this certificate.
+ *      - \ref VCCERT_ERROR_PARSER_FIELD_NEXT_FIELD_NOT_FOUND if another field
+ *        is not found.
+ *      - \ref VCCERT_ERROR_PARSER_FIELD_INVALID_ARG if an invalid argument is
+ *        provided.
+ *      - \ref VCCERT_ERROR_PARSER_FIELD_INVALID_FIELD_SIZE if a field with an
+ *        invalid size is encountered in the certificate.
+ *      - a non-zero error code on failure.
  */
 int vccert_parser_find_short(
     vccert_parser_context_t* context, uint16_t field_id,

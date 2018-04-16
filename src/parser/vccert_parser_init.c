@@ -17,14 +17,18 @@
 static void vccert_parser_dispose(void* context);
 
 /**
- * Initialize a parser context structure using the given options.
+ * \brief Initialize a parser context structure using the given options.
  *
  * \param options           The options structure to initialize.
  * \param context           The parser context structure to initialize.
  * \param cert              A pointer to the raw certificate to parse.
  * \param size              The size of the certificate to parse.
  *
- * \returns 0 on success and non-zero on failure.
+ * \returns a status code indicating success or failure.
+ *      - \ref VCCERT_STATUS_SUCCESS on success.
+ *      - \ref VCCERT_ERROR_PARSER_INIT_INVALID_ARG if an invalid argument was
+ *        passed to vccert_parser_init().
+ *      - a non-zero error code on failure.
  */
 int vccert_parser_init(
     vccert_parser_options_t* options, vccert_parser_context_t* context,

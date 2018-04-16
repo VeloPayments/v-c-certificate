@@ -13,11 +13,12 @@
 #include "builder_internal.h"
 
 /**
- * Get a pointer to the current certificate and its size.  The certificate
- * pointer is owned by the builder context structure and will be disposed when
- * the structure is disposed.  If the caller wishes to keep the certificate
- * beyond the scope of the builder context, it should copy this certificate
- * data.
+ * \brief Get a pointer to the current certificate and its size.
+ *
+ * The certificate pointer is owned by the builder context structure and will be
+ * disposed when the structure is disposed.  If the caller wishes to keep the
+ * certificate beyond the scope of the builder context, it should copy this
+ * certificate data.
  *
  * \param context           The builder context to use for this operation.
  * \param size              A pointer to a size_t field to receive the current

@@ -12,12 +12,14 @@
 #include "parser_internal.h"
 
 /**
- * Return the next field in the certificate.  If the certificate has not been
- * attested, then this performs an UNSAFE SEARCH of the RAW CERTIFICATE.  Run
- * vccert_parser_attest() first if you want trusted information.  Additional
- * fields can be found by calling vccert_parser_field_next().  The value pointer
- * should be pointing to a valid field in this certificate.  It will be used to
- * compute the offset of the next field in the certificate.
+ * \brief Return the next field in the certificate.
+ *
+ * If the certificate has not been attested, then this performs an UNSAFE SEARCH
+ * of the RAW CERTIFICATE.  Run vccert_parser_attest() first if you want trusted
+ * information.  Additional fields can be found by calling
+ * vccert_parser_field_next().  The value pointer should be pointing to a valid
+ * field in this certificate.  It will be used to compute the offset of the next
+ * field in the certificate.
  *
  * \param context           The parser context structure for this certificate.
  * \param field_id          The pointer to receive the short-hand field
@@ -27,7 +29,17 @@
  *                          the certificate.
  * \param size              The pointer to receive the size of this field.
  *
- * \returns 0 on success and non-zero if no fields exist in this certificate.
+ * \returns a status code indicating success or failure.
+ *      - \ref VCCERT_STATUS_SUCCESS on success.
+ *      - \ref VCCERT_ERROR_PARSER_FIELD_NEXT_INVALID_FIELD_SIZE if a field with
+ *        an invalid size is encountered in this certificate.
+ *      - \ref VCCERT_ERROR_PARSER_FIELD_NEXT_FIELD_NOT_FOUND if another field
+ *        is not found.
+ *      - \ref VCCERT_ERROR_PARSER_FIELD_INVALID_ARG if an invalid argument is
+ *        provided.
+ *      - \ref VCCERT_ERROR_PARSER_FIELD_INVALID_FIELD_SIZE if a field with an
+ *        invalid size is encountered in the certificate.
+ *      - a non-zero error code on failure.
  */
 int vccert_parser_field_next(
     vccert_parser_context_t* context, uint16_t* field_id,

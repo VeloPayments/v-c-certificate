@@ -13,7 +13,7 @@
 #include "builder_internal.h"
 
 /**
- * Add an int32_t field to the certificate with a short field ID.
+ * \brief Add an int32_t field to the certificate with a short field ID.
  *
  * Note that this value will be written as a Big Endian integer value.
  *
@@ -21,7 +21,10 @@
  * \param field             The short field ID to add.
  * \param value             The int32_t value to encode as this field.
  *
- * \returns 0 on success and non-zero on failure.
+ * \returns a status code indicating success or failure.
+ *      - \ref VCCERT_STATUS_SUCCESS on success.
+ *      - \ref VCCERT_ERROR_BUILDER_ADD_INVALID_ARG if one of the arguments to
+ *              this method is invalid.
  */
 int vccert_builder_add_short_int32(
     vccert_builder_context_t* context, uint16_t field, int32_t value)

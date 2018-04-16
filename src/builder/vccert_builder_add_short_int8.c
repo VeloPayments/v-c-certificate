@@ -13,13 +13,16 @@
 #include "builder_internal.h"
 
 /**
- * Add an int8_t field to the certificate with a short field ID.
+ * \brief Add an int8_t field to the certificate with a short field ID.
  *
  * \param context           The builder context to use for this operation.
  * \param field             The short field ID to add.
  * \param value             The int8_t value to encode as this field.
  *
- * \returns 0 on success and non-zero on failure.
+ * \returns a status code indicating success or failure.
+ *      - \ref VCCERT_STATUS_SUCCESS on success.
+ *      - \ref VCCERT_ERROR_BUILDER_ADD_INVALID_ARG if one of the arguments to
+ *              this method is invalid.
  */
 int vccert_builder_add_short_int8(
     vccert_builder_context_t* context, uint16_t field, int8_t value)

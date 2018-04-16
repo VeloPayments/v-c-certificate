@@ -16,14 +16,18 @@
 static void vccert_builder_dispose(void* context);
 
 /**
- * Initialize a builder context structure using the given options and maximum
- * size.
+ * \brief Initialize a builder context structure using the given options and
+ * maximum size.
  *
  * \param options           The options structure to initialize.
  * \param context           The builder context structure to initialize.
  * \param size              The maximum size of the certificate.
  *
- * \returns 0 on success and non-zero on failure.
+ * \returns a status code indicating success or failure.
+ *      - \ref VCCERT_STATUS_SUCCESS on success.
+ *      - \ref VCCERT_ERROR_BUILDER_INIT_INVALID_ARG if one of the arguments to
+ *             this method is invalid.
+ *      - a non-zero value on error.
  */
 int vccert_builder_init(
     vccert_builder_options_t* options, vccert_builder_context_t* context,

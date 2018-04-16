@@ -17,9 +17,11 @@
 static void vccert_parser_options_dispose(void* options);
 
 /**
- * Initialize a parser options structure using the given allocator, crypto
- * suite, and callback methods.  This options structure is owned by the caller
- * and must be disposed of when no longer needed by calling dispose().
+ * \brief Initialize a parser options structure using the given allocator,
+ * crypto suite, and callback methods.
+ *
+ * This options structure is owned by the caller and must be disposed of when no
+ * longer needed by calling dispose().
  *
  * \param options           The options structure to initialize.
  * \param alloc_opts        The allocator options to use for this structure.
@@ -31,7 +33,11 @@ static void vccert_parser_options_dispose(void* options);
  * \param key_resolver      The entity key resolver to use for this structure.
  * \param context           The user-specific context to use for this structure.
  *
- * \returns 0 on success and non-zero on failure.
+ * \returns a status code indicating success or failure.
+ *      - \ref VCCERT_STATUS_SUCCESS on success.
+ *      - \ref VCCERT_ERROR_PARSER_OPTIONS_INIT_INVALID_ARG an invalid argument
+ *        was passed to vccert_parser_options_init().
+ *      - a non-zero error code on failure.
  */
 int vccert_parser_options_init(
     vccert_parser_options_t* options, allocator_options_t* alloc_opts,

@@ -1,12 +1,14 @@
 /**
  * \file parser.h
  *
- * Certificate Parser.  The Certificate Parser provides a directed mechanism
- * for parsing a certificate.  It supports raw mode, which allows a freeform
- * certificate to be parsed, and contract mode, in which a certificate must be
- * strictly parsed following a contract.
+ * \brief The Certificate Parser provides a directed mechanism for parsing a
+ * certificate.
  *
- * \copyright 2017 Velo Payments, Inc.  All rights reserved.
+ * It supports raw mode, which allows a freeform certificate to be parsed, and
+ * contract mode, in which a certificate must be strictly parsed following a
+ * contract.
+ *
+ * \copyright 2017-2018 Velo Payments, Inc.  All rights reserved.
  */
 
 #ifndef VCCERT_PARSER_HEADER_GUARD
@@ -24,9 +26,24 @@
 extern "C" {
 #endif  //__cplusplus
 
-/* sizes for fields in a certificate */
+/**
+ * \defgroup ParserFieldConstants Constants related to parser fields.
+ *
+ * @{
+ */
+
+/**
+ * \brief Size of the Field Type.
+ */
 #define FIELD_TYPE_SIZE 2
+
+/**
+ * \brief Size of the Field Size.
+ */
 #define FIELD_SIZE_SIZE 2
+/**
+ * @}
+ */
 
 /* forward declaration for parser options. */
 struct vccert_parser_options;
@@ -35,28 +52,36 @@ struct vccert_parser_options;
 struct vccert_parser_context;
 
 /**
- * Contract function pointer.
+ * \brief A contract function examines a certificate and performs attestation
+ * rules above and beyond the basic signing entity certificate chain walk
+ * performed by the initial parser.
  *
- * A contract function examines a certificate and performs attestation rules
- * above and beyond the basic signing entity certificate chain walk performed by
- * the initial parser.  This contract function may cause additional certificates
- * to be parsed, and may recursively call into the parser options to test the
- * contract associated with a given artifact.
+ * This contract function may cause additional certificates to be parsed, and
+ * may recursively call into the parser options to test the contract associated
+ * with a given artifact.
+ *
+ * \param options The \ref vccert_parser_options structure for this parser.  The
+ *                options used to construct this parser.
+ * \param context The \ref vccert_parser_context structure for this parser.  The
+ *                current parser context.
+ *
+ * \returns the result of executing the contract.
+ *      - true if this certificate passes the contract.
+ *      - false if this cetificate fails the contract.
  */
 typedef bool (*vccert_contract_fn_t)(
     struct vccert_parser_options* options,
     struct vccert_parser_context* context);
 
 /**
- * Artifact transaction resolver function pointer.
+ * \brief Looks up the last transaction certificate associated with the given
+ * artifact UUID.
  *
- * Look up the last transaction certificate associated with the given artifact
- * UUID.  Note that the artifact UUID must match the values provided to this
- * callback.  The callback updates the pointer to the buffer provided to point
- * to a copy of this certificate and the Boolean flag to indicate whether this
- * certificate can be trusted or must also be attested.  Optionally, a
- * transaction UUID can be provided to pick an older transaction associated with
- * this artifact.
+ * Note that the artifact UUID must match the values provided to this callback.
+ * The callback updates the pointer to the buffer provided to point to a copy of
+ * this certificate and the Boolean flag to indicate whether this certificate
+ * can be trusted or must also be attested.  Optionally, a transaction UUID can
+ * be provided to pick an older transaction associated with this artifact.
  *
  * \param options           Opaque pointer to this options structure.
  * \param parser            Opaque pointer to the parser context.
@@ -76,7 +101,9 @@ typedef bool (*vccert_contract_fn_t)(
  *                          passed the attestation process.  Otherwise, it
  *                          MUST BE ATTESTED.
  *
- * \returns true if the entity certificate was found, and false otherwise.
+ * \returns the resolution status for this transaction.
+ *      - true if the transaction certificate was found.
+ *      - false if the transaction certificate was not found.
  */
 typedef bool (*vccert_parser_transaction_resolver_t)(
     void* options, void* parser, const uint8_t* artifact_id,
@@ -84,9 +111,7 @@ typedef bool (*vccert_parser_transaction_resolver_t)(
     bool* trusted);
 
 /**
- * Artifact state resolver.
- *
- * Get the state of the artifact at the current time frame.
+ * \brief Get the state of the artifact at the current time frame.
  *
  * \param options           Opaque pointer to this options structure.
  * \param parser            Opaque pointer to the parser context.
@@ -95,19 +120,21 @@ typedef bool (*vccert_parser_transaction_resolver_t)(
  * \param txn_id            Optional pointer to a buffer to receive the last
  *                          transaction UUID associated with this artifact.
  *
- * \returns -1 if the artifact cannot be found or if the artifact state is
- * unknown.  Otherwise, returns the state of the artifact.
+ * \returns the state of this artifact.
+ *      - -1 if the artifact cannot be found or if the artifact state is
+ *        unknown.
+ *      - Otherwise, returns the state of the artifact.
  */
 typedef int32_t (*vccert_parser_artifact_state_resolver_t)(
     void* options, void* parser, const uint8_t* artifact_id,
     vccrypt_buffer_t* txn_id);
 
 /**
- * Contract function resolver.
+ * \brief Get the contract function associated with the given transaction type
+ * UUID.
  *
- * Get the contract function associated with the given transaction type UUID.
- * This contract function will be used to perform further attestation of
- * this certificate.
+ * This contract function will be used to perform further attestation of this
+ * certificate.
  *
  * \param options           Opaque pointer to this options structure.
  * \param parser            Opaque pointer to the parser context.
@@ -123,12 +150,12 @@ typedef vccert_contract_fn_t (*vccert_parser_contract_resolver_t)(
     const uint8_t* artifact_id);
 
 /**
- * Entity key resolver.
+ * \brief Get the public portions of the encryption and signing keys for a given
+ * entity.
  *
- * Get the public portions of the encryption and signing keys for a given
- * entity.  The implementation of this function is responsible for caching
- * details about a given entity from the blockchain, managing key rotation /
- * change operations, and managing expiry.
+ * The implementation of this function is responsible for caching details about
+ * a given entity from the blockchain, managing key rotation / change
+ * operations, and managing expiry.
  *
  * \param options           Opaque pointer to this options structure.
  * \param parser            Opaque pointer to the parser context.
@@ -151,72 +178,109 @@ typedef bool (*vccert_parser_entity_key_resolver_t)(
     vccrypt_buffer_t* pubsignkey_buffer);
 
 /**
- * The parser options callback structure is used to manage callbacks needed to
- * parse a certificate.  In particular, certificate attestation is a recursive
- * process that requires walking a certificate chain back to a root certificate.
- * In order to facilitate a faster certificate attestation process, it is
- * possible to signal the parser that a given certificate in the chain has
- * already been verified.  This optimization should be used carefully, because
- * using it incorrectly WILL BREAK THE SECURITY OF THE SYSTEM.
+ * \brief The parser options callback structure is used to manage callbacks
+ * needed to parse a certificate.
+ *
+ * In particular, certificate attestation is a recursive process that requires
+ * walking a certificate chain back to a root certificate. In order to
+ * facilitate a faster certificate attestation process, it is possible to signal
+ * the parser that a given certificate in the chain has already been verified.
+ * This optimization should be used carefully, because using it incorrectly WILL
+ * BREAK THE SECURITY OF THE SYSTEM.
  */
 typedef struct vccert_parser_options
 {
-    /* this options structure inherits from disposable. */
+    /**
+     * \brief This options structure inherits from disposable.
+     */
     disposable_t hdr;
 
-    /* the allocator options to use for this parser. */
+    /**
+     * \brief the allocator options to use for this parser.
+     */
     allocator_options_t* alloc_opts;
 
-    /* the crypto suite to use for this parser. */
+    /**
+     * \brief The crypto suite to use for this parser.
+     */
     vccrypt_suite_options_t* crypto_suite;
 
-    /* transaction resolver */
+    /**
+     * \brief The transaction resolver to use for this parser.
+     */
     vccert_parser_transaction_resolver_t parser_options_transaction_resolver;
 
-    /* artifact state resolver */
+    /**
+     * \brief The artifact state resolver to use for this parser.
+     */
     vccert_parser_artifact_state_resolver_t
         parser_options_artifact_state_resolver;
 
-    /* contract resolver */
+    /**
+     * \brief The contract resolver to use for this parser.
+     */
     vccert_parser_contract_resolver_t parser_options_contract_resolver;
 
-    /* entity public key resolver */
+    /**
+     * \brief The entity public key resolver for this parser.
+     */
     vccert_parser_entity_key_resolver_t parser_options_entity_key_resolver;
 
     /**
-     * Options-specific context.
+     * \brief Options-specific context.
      */
     void* context;
 
 } vccert_parser_options_t;
 
 /**
- * The parser context manages attesting and parsing a certificate.
+ * \brief The parser context manages attesting and parsing a certificate.
  */
 typedef struct vccert_parser_context
 {
-    /* this is a disposable structure */
+    /**
+     * \brief This is a disposable structure.
+     */
     disposable_t hdr;
 
-    /* options structure for this parser */
+    /**
+     * \brief The options structure for this parser.
+     */
     vccert_parser_options_t* options;
-    /* raw pointer to the certificate */
+
+    /**
+     * \brief The raw pointer to the certificate.
+     */
     const uint8_t* cert;
-    /* raw size of the certificate */
+
+    /**
+     * \brief The raw size of the certificate.
+     */
     size_t raw_size;
-    /* attested size of the certificate */
+
+    /**
+     * \brief The attested size of the certificate.
+     */
     size_t size;
 
-    /* back-tracking support for attestation */
+    /**
+     * \brief Back-tracking support for attestation.
+     */
     vccrypt_buffer_t parent_buffer;
+
+    /**
+     * \brief The parent parser context, used for back-tracking.
+     */
     struct vccert_parser_context* parent;
 
 } vccert_parser_context_t;
 
 /**
- * Initialize a parser options structure using the given allocator, crypto
- * suite, and callback methods.  This options structure is owned by the caller
- * and must be disposed of when no longer needed by calling dispose().
+ * \brief Initialize a parser options structure using the given allocator,
+ * crypto suite, and callback methods.
+ *
+ * This options structure is owned by the caller and must be disposed of when no
+ * longer needed by calling dispose().
  *
  * \param options           The options structure to initialize.
  * \param alloc_opts        The allocator options to use for this structure.
@@ -228,7 +292,11 @@ typedef struct vccert_parser_context
  * \param key_resolver      The entity key resolver to use for this structure.
  * \param context           The user-specific context to use for this structure.
  *
- * \returns 0 on success and non-zero on failure.
+ * \returns a status code indicating success or failure.
+ *      - \ref VCCERT_STATUS_SUCCESS on success.
+ *      - \ref VCCERT_ERROR_PARSER_OPTIONS_INIT_INVALID_ARG if an invalid
+ *        argument was passed to vccert_parser_options_init().
+ *      - a non-zero error code on failure.
  */
 int vccert_parser_options_init(
     vccert_parser_options_t* options, allocator_options_t* alloc_opts,
@@ -239,21 +307,25 @@ int vccert_parser_options_init(
     vccert_parser_entity_key_resolver_t key_resolver, void* context);
 
 /**
- * Initialize a parser context structure using the given options.
+ * \brief Initialize a parser context structure using the given options.
  *
  * \param options           The options structure to initialize.
  * \param context           The parser context structure to initialize.
  * \param cert              A pointer to the raw certificate to parse.
  * \param size              The size of the certificate to parse.
  *
- * \returns 0 on success and non-zero on failure.
+ * \returns a status code indicating success or failure.
+ *      - \ref VCCERT_STATUS_SUCCESS on success.
+ *      - \ref VCCERT_ERROR_PARSER_INIT_INVALID_ARG if an invalid argument was
+ *        passed to vccert_parser_init().
+ *      - a non-zero error code on failure.
  */
 int vccert_parser_init(
     vccert_parser_options_t* options, vccert_parser_context_t* context,
     const void* cert, size_t size);
 
 /**
- * Perform attestation on a certificate.
+ * \brief Perform attestation on a certificate.
  *
  * \param context           The parser context structure holding the certificate
  *                          on which attestation should be performed.
@@ -261,16 +333,39 @@ int vccert_parser_init(
  * \param verifyContract    Set to true if the contract for the given
  *                          transaction should be verified.
  *
- * \returns 0 on success and non-zero on failure.
+ * \returns a status code indicating success or failure.
+ *      - \ref VCCERT_STATUS_SUCCESS on success.
+ *      - \ref VCCERT_ERROR_PARSER_ATTEST_MISSING_SIGNER_UUID if the signer UUID
+ *        is missing from the certificate.
+ *      - \ref VCCERT_ERROR_PARSER_ATTEST_MISSING_SIGNATURE if the signature is
+ *        missing from the certificate.
+ *      - \ref VCCERT_ERROR_PARSER_ATTEST_GENERAL if a general error occurred
+ *        while attempting to attest this certificate.
+ *      - \ref VCCERT_ERROR_PARSER_ATTEST_MISSING_SIGNING_CERT if the
+ *        certificate containing the public signing key for the signing entity
+ *        could not be resolved.
+ *      - \ref VCCERT_ERROR_PARSER_ATTEST_SIGNATURE_MISMATCH if the computed
+ *        signature did not match the signature in the certificate.
+ *      - \ref VCCERT_ERROR_PARSER_ATTEST_MISSING_TRANSACTION_TYPE if the
+ *        transaction type for this certificate could not be found.
+ *      - \ref VCCERT_ERROR_PARSER_ATTEST_MISSING_ARTIFACT_ID if the artifact
+ *        identifier for this transaction could not be found.
+ *      - \ref VCCERT_ERROR_PARSER_ATTEST_MISSING_CONTRACT if the contract for
+ *        this certificate could not be found.
+ *      - \ref VCCERT_ERROR_PARSER_ATTEST_CONTRACT_VERIFICATION if contract
+ *        verification for this certificate failed.
+ *      - a non-zero error code on failure.
  */
 int vccert_parser_attest(
     vccert_parser_context_t* context, uint64_t height, bool verifyContract);
 
 /**
- * Return the first field in the certificate.  If the certificate has not been
- * attested, then this performs an UNSAFE SEARCH of the RAW CERTIFICATE.  Run
- * vccert_parser_attest() first if you want trusted information.  Additional
- * fields can be found by calling vccert_parser_field_next().
+ * \brief Return the first field in the certificate.
+ *
+ * If the certificate has not been attested, then this performs an UNSAFE SEARCH
+ * of the RAW CERTIFICATE.  Run vccert_parser_attest() first if you want trusted
+ * information.  Additional fields can be found by calling
+ * vccert_parser_field_next().
  *
  * \param context           The parser context structure for this certificate.
  * \param field_id          The pointer to receive the short-hand field
@@ -278,19 +373,27 @@ int vccert_parser_attest(
  * \param value             The pointer to receive a pointer to the field value.
  * \param size              The pointer to receive the size of this field.
  *
- * \returns 0 on success and non-zero if no fields exist in this certificate.
+ * \returns a status code indicating success or failure.
+ *      - \ref VCCERT_STATUS_SUCCESS on success.
+ *      - \ref VCCERT_ERROR_PARSER_FIELD_INVALID_ARG if an invalid argument is
+ *        provided.
+ *      - \ref VCCERT_ERROR_PARSER_FIELD_INVALID_FIELD_SIZE if a field with an
+ *        invalid size is encountered in the certificate.
+ *      - a non-zero error code on failure.
  */
 int vccert_parser_field_first(
     vccert_parser_context_t* context, uint16_t* field_id,
     const uint8_t** value, size_t* size);
 
 /**
- * Return the next field in the certificate.  If the certificate has not been
- * attested, then this performs an UNSAFE SEARCH of the RAW CERTIFICATE.  Run
- * vccert_parser_attest() first if you want trusted information.  Additional
- * fields can be found by calling vccert_parser_field_next().  The value pointer
- * should be pointing to a valid field in this certificate.  It will be used to
- * compute the offset of the next field in the certificate.
+ * \brief Return the next field in the certificate.
+ *
+ * If the certificate has not been attested, then this performs an UNSAFE SEARCH
+ * of the RAW CERTIFICATE.  Run vccert_parser_attest() first if you want trusted
+ * information.  Additional fields can be found by calling
+ * vccert_parser_field_next().  The value pointer should be pointing to a valid
+ * field in this certificate.  It will be used to compute the offset of the next
+ * field in the certificate.
  *
  * \param context           The parser context structure for this certificate.
  * \param field_id          The pointer to receive the short-hand field
@@ -300,18 +403,30 @@ int vccert_parser_field_first(
  *                          the certificate.
  * \param size              The pointer to receive the size of this field.
  *
- * \returns 0 on success and non-zero if no fields exist in this certificate.
+ * \returns a status code indicating success or failure.
+ *      - \ref VCCERT_STATUS_SUCCESS on success.
+ *      - \ref VCCERT_ERROR_PARSER_FIELD_NEXT_INVALID_FIELD_SIZE if a field with
+ *        an invalid size is encountered in this certificate.
+ *      - \ref VCCERT_ERROR_PARSER_FIELD_NEXT_FIELD_NOT_FOUND if another field
+ *        is not found.
+ *      - \ref VCCERT_ERROR_PARSER_FIELD_INVALID_ARG if an invalid argument is
+ *        provided.
+ *      - \ref VCCERT_ERROR_PARSER_FIELD_INVALID_FIELD_SIZE if a field with an
+ *        invalid size is encountered in the certificate.
+ *      - a non-zero error code on failure.
  */
 int vccert_parser_field_next(
     vccert_parser_context_t* context, uint16_t* field_id,
     const uint8_t** value, size_t* size);
 
 /**
- * Attempt to find the first occurrence of a field with the given short-hand
- * identifier in the certificate. If the certificate has not been attested, then
- * this performs an UNSAFE SEARCH of the RAW CERTIFICATE.  Run
- * vccert_parser_attest() first if you want trusted information.  Additional
- * matching fields can be found by calling vccert_parser_find_next().
+ * \brief Attempt to find the first occurrence of a field with the given
+ * short-hand identifier in the certificate.
+ *
+ * If the certificate has not been attested, then this performs an UNSAFE SEARCH
+ * of the RAW CERTIFICATE.  Run vccert_parser_attest() first if you want trusted
+ * information.  Additional matching fields can be found by calling
+ * vccert_parser_find_next().
  *
  * \param context           The parser context structure for this certificate.
  * \param field_id          The short-hand field identifier to find.
@@ -320,18 +435,30 @@ int vccert_parser_field_next(
  * \param size              A pointer to receive the field size if the field is
  *                          found.
  *
- * \returns 0 on success and non-zero on failure.
+ * \returns a status code indicating success or failure.
+ *      - \ref VCCERT_STATUS_SUCCESS on success.
+ *      - \ref VCCERT_ERROR_PARSER_FIELD_NEXT_INVALID_FIELD_SIZE if a field with
+ *        an invalid size is encountered in this certificate.
+ *      - \ref VCCERT_ERROR_PARSER_FIELD_NEXT_FIELD_NOT_FOUND if another field
+ *        is not found.
+ *      - \ref VCCERT_ERROR_PARSER_FIELD_INVALID_ARG if an invalid argument is
+ *        provided.
+ *      - \ref VCCERT_ERROR_PARSER_FIELD_INVALID_FIELD_SIZE if a field with an
+ *        invalid size is encountered in the certificate.
+ *      - a non-zero error code on failure.
  */
 int vccert_parser_find_short(
     vccert_parser_context_t* context, uint16_t field_id,
     const uint8_t** value, size_t* size);
 
 /**
- * Attempt to find the first field with the given UUID identifier in the
- * certificate. If the certificate has not been attested, then this performs an
- * UNSAFE SEARCH of the RAW CERTIFICATE.  Run vccert_parser_attest() first if
- * you want trusted information.  Additional matching fields can be found by
- * calling vccert_parser_find_next().
+ * \brief Attempt to find the first field with the given UUID identifier in the
+ * certificate.
+ *
+ * If the certificate has not been attested, then this performs an UNSAFE SEARCH
+ * of the RAW CERTIFICATE.  Run vccert_parser_attest() first if you want trusted
+ * information.  Additional matching fields can be found by calling
+ * vccert_parser_find_next().
  *
  * \param context           The parser context structure for this certificate.
  * \param field_id          A pointer to the UUID value to find.
@@ -340,17 +467,28 @@ int vccert_parser_find_short(
  * \param size              A pointer to receive the field size if the field is
  *                          found.
  *
- * \returns 0 on success and non-zero on failure.
+ * \returns a status code indicating success or failure.
+ *      - \ref VCCERT_STATUS_SUCCESS on success.
+ *      - \ref VCCERT_ERROR_PARSER_FIELD_NEXT_INVALID_FIELD_SIZE if a field with
+ *        an invalid size is encountered in this certificate.
+ *      - \ref VCCERT_ERROR_PARSER_FIELD_NEXT_FIELD_NOT_FOUND if another field
+ *        is not found.
+ *      - \ref VCCERT_ERROR_PARSER_FIELD_INVALID_ARG if an invalid argument is
+ *        provided.
+ *      - \ref VCCERT_ERROR_PARSER_FIELD_INVALID_FIELD_SIZE if a field with an
+ *        invalid size is encountered in the certificate.
+ *      - a non-zero error code on failure.
  */
 int vccert_parser_find(
     vccert_parser_context_t* context, const uint8_t* field_id,
     const uint8_t** value, size_t* size);
 
 /**
- * Attempt to find the next occurrence of a field with the same short-hand
- * identifier as the current field in the certificate. If the certificate has
- * not been attested, then this performs an UNSAFE SEARCH of the RAW
- * CERTIFICATE.  Run vccert_parser_attest() first if you want trusted
+ * \brief Attempt to find the next occurrence of a field with the same
+ * short-hand identifier as the current field in the certificate.
+ *
+ * If the certificate has not been attested, then this performs an UNSAFE SEARCH
+ * of the RAW CERTIFICATE.  Run vccert_parser_attest() first if you want trusted
  * information.
  *
  * \param context           The parser context structure for this certificate.
@@ -360,7 +498,21 @@ int vccert_parser_find(
  * \param size              A pointer to receive the field size if the field is
  *                          found.
  *
- * \returns 0 on success and non-zero on failure.
+ * \returns a status code indicating success or failure.
+ *      - \ref VCCERT_STATUS_SUCCESS on success.
+ *      - \ref VCCERT_ERROR_PARSER_FIELD_NEXT_INVALID_FIELD_SIZE if a field with
+ *        an invalid size is encountered in this certificate.
+ *      - \ref VCCERT_ERROR_PARSER_FIELD_NEXT_FIELD_NOT_FOUND if another field
+ *        is not found.
+ *      - \ref VCCERT_ERROR_PARSER_FIND_NEXT_FIELD_NOT_FOUND if another field
+ *        is not found.
+ *      - \ref VCCERT_ERROR_PARSER_FIELD_INVALID_ARG if an invalid argument is
+ *        provided.
+ *      - \ref VCCERT_ERROR_PARSER_FIELD_INVALID_FIELD_SIZE if a field with an
+ *        invalid size is encountered in the certificate.
+ *      - \ref VCCERT_ERROR_PARSER_FIND_NEXT_INVALID_FIELD_SIZE if a field
+ *        with an invalid size is encountered in the certificate.
+ *      - a non-zero error code on failure.
  */
 int vccert_parser_find_next(
     vccert_parser_context_t* context, const uint8_t** value, size_t* size);

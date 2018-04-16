@@ -15,7 +15,7 @@
 #include "builder_internal.h"
 
 /**
- * Sign the certificate using the given signer UUID and private key.
+ * \brief Sign the certificate using the given signer UUID and private key.
  *
  * Note that the signer_id is expected as a Big Endian representation of a UUID.
  *
@@ -24,7 +24,13 @@
  * \param private_key       The private key buffer to use to sign the
  *                          certificate.
  *
- * \returns 0 on success and non-zero on failure.
+ * \returns a status code indicating success or failure.
+ *      - \ref VCCERT_STATUS_SUCCESS on success.
+ *      - \ref VCCERT_ERROR_BUILDER_ADD_INVALID_ARG if one of the arguments to
+ *             this method is invalid.
+ *      - \ref VCCERT_ERROR_BUILDER_SIGN_INVALID_FIELD_SIZE if the signature
+ *             would overwrite memory.
+ *      - a nonzero value indicating error.
  */
 int vccert_builder_sign(
     vccert_builder_context_t* context, const uint8_t* signer_id,

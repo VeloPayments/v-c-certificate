@@ -15,7 +15,7 @@
 #include <vpr/parameters.h>
 
 /**
- * Perform attestation on a certificate.
+ * \brief Perform attestation on a certificate.
  *
  * \param context           The parser context structure holding the certificate
  *                          on which attestation should be performed.
@@ -23,7 +23,28 @@
  * \param verifyContract    Set to true if the contract for the given
  *                          transaction should be verified.
  *
- * \returns 0 on success and non-zero on failure.
+ * \returns a status code indicating success or failure.
+ *      - \ref VCCERT_STATUS_SUCCESS on success.
+ *      - \ref VCCERT_ERROR_PARSER_ATTEST_MISSING_SIGNER_UUID if the signer UUID
+ *        is missing from the certificate.
+ *      - \ref VCCERT_ERROR_PARSER_ATTEST_MISSING_SIGNATURE if the signature is
+ *        missing from the certificate.
+ *      - \ref VCCERT_ERROR_PARSER_ATTEST_GENERAL if a general error occurred
+ *        while attempting to attest this certificate.
+ *      - \ref VCCERT_ERROR_PARSER_ATTEST_MISSING_SIGNING_CERT if the
+ *        certificate containing the public signing key for the signing entity
+ *        could not be resolved.
+ *      - \ref VCCERT_ERROR_PARSER_ATTEST_SIGNATURE_MISMATCH if the computed
+ *        signature did not match the signature in the certificate.
+ *      - \ref VCCERT_ERROR_PARSER_ATTEST_MISSING_TRANSACTION_TYPE if the
+ *        transaction type for this certificate could not be found.
+ *      - \ref VCCERT_ERROR_PARSER_ATTEST_MISSING_ARTIFACT_ID if the artifact
+ *        identifier for this transaction could not be found.
+ *      - \ref VCCERT_ERROR_PARSER_ATTEST_MISSING_CONTRACT if the contract for
+ *        this certificate could not be found.
+ *      - \ref VCCERT_ERROR_PARSER_ATTEST_CONTRACT_VERIFICATION if contract
+ *        verification for this certificate failed.
+ *      - a non-zero error code on failure.
  */
 int vccert_parser_attest(
     vccert_parser_context_t* context, uint64_t height, bool verifyContract)
