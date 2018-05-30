@@ -425,12 +425,29 @@ typedef enum vccert_field_type
     VCCERT_FIELD_TYPE_VELO_RESERVED_008E = 0x008E,
     VCCERT_FIELD_TYPE_VELO_RESERVED_008F = 0x008F,
 
+
+    /**
+     * \brief Agent Subtype Vote.
+     */
+    VCCERT_FIELD_TYPE_AGENT_SUBTYPE_VOTE = 0x0090,
+    /**
+     * \brief Agent Subtype Commit.
+     */
+    VCCERT_FIELD_TYPE_AGENT_SUBTYPE_COMMIT = 0x0091,
+    /**
+     * \brief Agent Subtype Proposal.
+     */
+    VCCERT_FIELD_TYPE_AGENT_SUBTYPE_PROPOSAL = 0x0092,
+    /**
+     * \brief Agent Subtype Recovery.
+     */
+    VCCERT_FIELD_TYPE_AGENT_SUBTYPE_RECOVERY = 0x0093,
+    /**
+     * \brief Agent Subtype Heartbeat.
+     */
+    VCCERT_FIELD_TYPE_AGENT_SUBTYPE_HEARTBEAT = 0x0094,
+
     /* reserved fields */
-    VCCERT_FIELD_TYPE_VELO_RESERVED_0090 = 0x0090,
-    VCCERT_FIELD_TYPE_VELO_RESERVED_0091 = 0x0091,
-    VCCERT_FIELD_TYPE_VELO_RESERVED_0092 = 0x0092,
-    VCCERT_FIELD_TYPE_VELO_RESERVED_0093 = 0x0093,
-    VCCERT_FIELD_TYPE_VELO_RESERVED_0094 = 0x0094,
     VCCERT_FIELD_TYPE_VELO_RESERVED_0095 = 0x0095,
     VCCERT_FIELD_TYPE_VELO_RESERVED_0096 = 0x0096,
     VCCERT_FIELD_TYPE_VELO_RESERVED_0097 = 0x0097,

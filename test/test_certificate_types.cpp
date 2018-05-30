@@ -65,6 +65,11 @@ TEST(certificate_types_test, match)
     ASSERT_EQ(0, vccrypt_buffer_read_hex(&buf, &hex_buf));
     ASSERT_EQ(0, memcmp(buf.data, vccert_certificate_type_uuid_private_entity, 16));
 
+    const char* AGENT_SUBTYPE = "9985d93731d44aa78222c317878d5373";
+    ASSERT_EQ(0, vccrypt_buffer_read_data(&hex_buf, AGENT_SUBTYPE, 32));
+    ASSERT_EQ(0, vccrypt_buffer_read_hex(&buf, &hex_buf));
+    ASSERT_EQ(0, memcmp(buf.data, vccert_certificate_type_uuid_agent_subtype, 16));
+
     /* clean up */
     dispose((disposable_t*)&buf);
     dispose((disposable_t*)&hex_buf);

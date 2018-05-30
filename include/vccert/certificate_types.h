@@ -47,6 +47,11 @@ extern const uint8_t vccert_certificate_type_uuid_txn[16];
  */
 extern const uint8_t vccert_certificate_type_uuid_private_entity[16];
 
+/**
+ * \brief The Agent Subtype Identifier.
+ */
+extern const uint8_t vccert_certificate_type_uuid_agent_subtype[16];
+
 /* make this header C++ friendly. */
 #ifdef __cplusplus
 }
