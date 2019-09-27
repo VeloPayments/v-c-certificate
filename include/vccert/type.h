@@ -14,12 +14,18 @@
 extern "C" {
 #endif  //__cplusplus
 
-typedef struct field_mapping
+typedef enum vccert_field_types
 {
-    uint8_t longcode[16];
-    uint16_t shortcode;
-    uint8_t type;
-} field_mapping_t;
+    VCCERT_FIELD_TYPE_STRING,
+    VCCERT_FIELD_TYPE_INT8,
+    VCCERT_FIELD_TYPE_INT16,
+    VCCERT_FIELD_TYPE_INT32,
+    VCCERT_FIELD_TYPE_INT64,
+    VCCERT_FIELD_TYPE_APN,
+    VCCERT_FIELD_TYPE_UUID,
+    VCCERT_FIELD_TYPE_DATE,
+    VCCERT_FIELD_TYPE_BOOL
+} vccert_field_types_t;
 
 /* make this header C++ friendly. */
 #ifdef __cplusplus
