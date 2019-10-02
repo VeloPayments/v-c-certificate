@@ -18,7 +18,7 @@ typedef struct field_mapping
 {
     uint8_t longcode[16];
     uint16_t shortcode;
-    uint8_t type;
+    vccert_field_types_t type;
 } field_mapping_t;
 
 /* make this header C++ friendly. */

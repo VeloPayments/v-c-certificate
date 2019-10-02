@@ -9,6 +9,8 @@
 #ifndef VCCERT_TYPE_HEADER_GUARD
 #define VCCERT_TYPE_HEADER_GUARD
 
+#include <vccert/type.h>
+
 /* make this header C++ friendly. */
 #ifdef __cplusplus
 extern "C" {
