@@ -186,7 +186,7 @@ int vccert_parser_attest(
     size_t artifact_id_size;
     if (VCCERT_STATUS_SUCCESS !=
             vccert_parser_find_short(
-                context, VCCERT_FIELD_TYPE_TRANSACTION_TYPE, &artifact_id,
+                context, VCCERT_FIELD_TYPE_ARTIFACT_ID, &artifact_id,
                 &artifact_id_size) ||
         16 != artifact_id_size)
     {
