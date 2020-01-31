@@ -23,10 +23,13 @@ static int32_t dummy_artifact_state_resolver(
 static bool dummy_entity_key_resolver(
     void*, void*, uint64_t, const uint8_t*, vccrypt_buffer_t*,
     vccrypt_buffer_t*);
-static vccert_contract_fn_t dummy_contract_resolver(
-    void*, void*, const uint8_t*, const uint8_t*);
-static vccert_contract_fn_t fail_contract_resolver(
-    void*, void*, const uint8_t*, const uint8_t*);
+static int dummy_contract_resolver(
+    void*, void*, const uint8_t*, const uint8_t*,
+    vccert_contract_closure_t* closure);
+static int fail_contract_resolver(
+    void*, void*, const uint8_t*, const uint8_t*,
+    vccert_contract_closure_t* closure);
+
 static int create_signed_certificate(
     bool enable_field_skip,
     int skip_field,
@@ -496,7 +499,7 @@ static bool dummy_entity_key_resolver(
  * Dummy contract.
  */
 static bool dummy_contract(
-    vccert_parser_options_t*, vccert_parser_context_t*)
+    vccert_parser_context_t*, void*)
 {
     return true;
 }
@@ -505,27 +508,44 @@ static bool dummy_contract(
  * Fail contract.
  */
 static bool fail_contract(
-    vccert_parser_options_t*, vccert_parser_context_t*)
+    vccert_parser_context_t*, void*)
 {
     return false;
 }
 
 /**
+ * Dummy disposer.
+ */
+static void dummy_dispose(void*)
+{
+}
+
+/**
  * Dummy contract resolver.
  */
-static vccert_contract_fn_t dummy_contract_resolver(
-    void*, void*, const uint8_t*, const uint8_t*)
+static int dummy_contract_resolver(
+    void*, void*, const uint8_t*, const uint8_t*,
+    vccert_contract_closure_t* closure)
 {
-    return &dummy_contract;
+    closure->hdr.dispose = &dummy_dispose;
+    closure->contract_fn = &dummy_contract;
+    closure->context = NULL;
+
+    return VCCERT_STATUS_SUCCESS;
 }
 
 /**
  * Fail contract resolver.
  */
-static vccert_contract_fn_t fail_contract_resolver(
-    void*, void*, const uint8_t*, const uint8_t*)
+static int fail_contract_resolver(
+    void*, void*, const uint8_t*, const uint8_t*,
+    vccert_contract_closure_t* closure)
 {
-    return &fail_contract;
+    closure->hdr.dispose = &dummy_dispose;
+    closure->contract_fn = &fail_contract;
+    closure->context = NULL;
+
+    return VCCERT_STATUS_SUCCESS;
 }
 
 /**

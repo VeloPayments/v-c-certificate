@@ -194,25 +194,29 @@ int vccert_parser_attest(
         goto sign_dispose;
     }
 
-    /* lookup the contract function */
-    vccert_contract_fn_t contract =
+    /* look up the contract function */
+    vccert_contract_closure_t contract;
+    retval =
         context->options->parser_options_contract_resolver(
-            context->options, context, txn_type, artifact_id);
-    if (contract == NULL)
+            context->options, context, txn_type, artifact_id, &contract);
+    if (VCCERT_STATUS_SUCCESS != retval)
     {
         retval = VCCERT_ERROR_PARSER_ATTEST_MISSING_CONTRACT;
         goto sign_dispose;
     }
 
     /* execute the contract to verify this transaction. */
-    if (!(*contract)(context->options, context))
+    if (!vccert_contract_closure_call(&contract, context))
     {
         retval = VCCERT_ERROR_PARSER_ATTEST_CONTRACT_VERIFICATION;
-        goto sign_dispose;
+        goto contract_dispose;
     }
 
     /* At this point, the certificate chain has been attested. */
     retval = VCCERT_STATUS_SUCCESS;
+
+contract_dispose:
+    dispose((disposable_t*)&contract);
 
 sign_dispose:
     dispose((disposable_t*)&sign);

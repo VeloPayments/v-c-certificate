@@ -51,6 +51,10 @@ struct vccert_parser_options;
 /* forward declaration for parser context. */
 struct vccert_parser_context;
 
+/* forward declaration for contract closure. */
+struct vccert_contract_closure;
+typedef struct vccert_contract_closure vccert_contract_closure_t;
+
 /**
  * \brief A contract function examines a certificate and performs attestation
  * rules above and beyond the basic signing entity certificate chain walk
@@ -130,10 +134,10 @@ typedef int32_t (*vccert_parser_artifact_state_resolver_t)(
     vccrypt_buffer_t* txn_id);
 
 /**
- * \brief Get the contract function associated with the given transaction type
- * UUID.
+ * \brief Initialize a contract closure that executes the contract for the given
+ * transaction type.
  *
- * This contract function will be used to perform further attestation of this
+ * This contract closure will be used to perform further attestation of this
  * certificate.
  *
  * \param options           Opaque pointer to this options structure.
@@ -142,12 +146,18 @@ typedef int32_t (*vccert_parser_artifact_state_resolver_t)(
  *                          transaction type ID for this certificate.
  * \param artifact_id       A pointer to the buffer holding the 128-bit
  *                          artifact UUID for the artifact in question.
+ * \param closure           Pointer to the closure handle to be initialized with
+ *                          this closure on success.  The caller owns this
+ *                          closure and must dispose of it by calling
+ *                          \ref dispose() when it is no longer needed.
  *
- * \returns a valid contract function on success, and NULL on failure.
+ * \returns a status code indicating success or failure.
+ *      - VCCERT_STATUS_SUCCESS on success.
  */
-typedef vccert_contract_fn_t (*vccert_parser_contract_resolver_t)(
+typedef int (*vccert_parser_contract_resolver_t)(
     void* options, void* parser, const uint8_t* type_id,
-    const uint8_t* artifact_id);
+    const uint8_t* artifact_id,
+    vccert_contract_closure_t* closure);
 
 /**
  * \brief Get the public portions of the encryption and signing keys for a given
@@ -274,6 +284,45 @@ typedef struct vccert_parser_context
     struct vccert_parser_context* parent;
 
 } vccert_parser_context_t;
+
+/**
+ * \brief The contract closure structure abstracts a way to "capture" variables
+ * as context so it is possible to write more complex first-order functions in
+ * C.
+ */
+struct vccert_contract_closure
+{
+    /**
+     * \brief This is a disposable structure.
+     */
+    disposable_t hdr;
+
+    /**
+     * \brief The function pointer for the contract function.
+     *
+     * A contract function examines a certificate and performs attestation
+     * rules above and beyond the basic signing entity certificate chain walk
+     * performed by the initial parser.
+     *
+     * This contract function may cause additional certificates to be parsed,
+     * and may recursively call into the parser options to test the contract
+     * associated with a given artifact.
+     *
+     * \param parser  The \ref vccert_parser_context structure for this parser.
+     *                The current parser context.
+     * \param context The opaque user context provided by the closure structure.
+     *
+     * \returns the result of executing the contract.
+     *      - true if this certificate passes the contract.
+     *      - false if this cetificate fails the contract.
+     */
+    bool (*contract_fn)(vccert_parser_context_t* parser, void* context);
+
+    /**
+     * \brief The user-defined context for this closure.
+     */
+    void* context;
+};
 
 /**
  * \brief Initialize a parser options structure using the given allocator,
@@ -516,6 +565,20 @@ int vccert_parser_find(
  */
 int vccert_parser_find_next(
     vccert_parser_context_t* context, const uint8_t** value, size_t* size);
+
+/**
+ * \brief Call the given contract closure with the given parser context.
+ *
+ * \param closure           The closure to call.
+ * \param parser            The parser context for this call.
+ *
+ * \returns the result of executing the contract.
+ *      - true if this certificate passes the contract.
+ *      - false if this certificate fails the contract.
+ */
+bool vccert_contract_closure_call(
+    vccert_contract_closure_t* closure,
+    vccert_parser_context_t* parser);
 
 /* make this header C++ friendly. */
 #ifdef __cplusplus

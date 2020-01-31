@@ -21,8 +21,9 @@ static int32_t dummy_artifact_state_resolver(
 static bool dummy_entity_key_resolver(
     void*, void*, uint64_t, const uint8_t*, vccrypt_buffer_t*,
     vccrypt_buffer_t*);
-static vccert_contract_fn_t dummy_contract_resolver(
-    void*, void*, const uint8_t*, const uint8_t*);
+static int dummy_contract_resolver(
+    void*, void*, const uint8_t*, const uint8_t*,
+    vccert_contract_closure_t* closure);
 
 static const uint8_t* TEST_CERT = (const uint8_t*)
     //field 0x0001 is 0x01020304
@@ -167,8 +168,9 @@ static bool dummy_entity_key_resolver(
 /**
  * Dummy contract resolver.
  */
-static vccert_contract_fn_t dummy_contract_resolver(
-    void*, void*, const uint8_t*, const uint8_t*)
+static int dummy_contract_resolver(
+    void*, void*, const uint8_t*, const uint8_t*,
+    vccert_contract_closure_t*)
 {
-    return NULL;
+    return VCCERT_ERROR_PARSER_ATTEST_MISSING_CONTRACT;
 }
