@@ -56,28 +56,6 @@ struct vccert_contract_closure;
 typedef struct vccert_contract_closure vccert_contract_closure_t;
 
 /**
- * \brief A contract function examines a certificate and performs attestation
- * rules above and beyond the basic signing entity certificate chain walk
- * performed by the initial parser.
- *
- * This contract function may cause additional certificates to be parsed, and
- * may recursively call into the parser options to test the contract associated
- * with a given artifact.
- *
- * \param options The \ref vccert_parser_options structure for this parser.  The
- *                options used to construct this parser.
- * \param context The \ref vccert_parser_context structure for this parser.  The
- *                current parser context.
- *
- * \returns the result of executing the contract.
- *      - true if this certificate passes the contract.
- *      - false if this cetificate fails the contract.
- */
-typedef bool (*vccert_contract_fn_t)(
-    struct vccert_parser_options* options,
-    struct vccert_parser_context* context);
-
-/**
  * \brief Looks up the last transaction certificate associated with the given
  * artifact UUID.
  *
