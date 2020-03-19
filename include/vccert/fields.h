@@ -488,16 +488,68 @@ typedef enum vccert_field_type
     VCCERT_FIELD_TYPE_VELO_RESERVED_00AE = 0x00AE,
     VCCERT_FIELD_TYPE_VELO_RESERVED_00AF = 0x00AF,
 
-    VCCERT_FIELD_TYPE_VELO_RESERVED_00B0 = 0x00B0,
-    VCCERT_FIELD_TYPE_VELO_RESERVED_00B1 = 0x00B1,
-    VCCERT_FIELD_TYPE_VELO_RESERVED_00B2 = 0x00B2,
-    VCCERT_FIELD_TYPE_VELO_RESERVED_00B3 = 0x00B3,
-    VCCERT_FIELD_TYPE_VELO_RESERVED_00B4 = 0x00B4,
-    VCCERT_FIELD_TYPE_VELO_RESERVED_00B5 = 0x00B5,
-    VCCERT_FIELD_TYPE_VELO_RESERVED_00B6 = 0x00B6,
-    VCCERT_FIELD_TYPE_VELO_RESERVED_00B7 = 0x00B7,
-    VCCERT_FIELD_TYPE_VELO_RESERVED_00B8 = 0x00B8,
-    VCCERT_FIELD_TYPE_VELO_RESERVED_00B9 = 0x00B9,
+    /**
+     * \brief Schema Min Occurrences.
+     */
+    VCCERT_FIELD_TYPE_VELO_SCHEMA_MIN_OCCURRENCES = 0x00B0,
+    /**
+     * \brief Schema Max Occurrences.
+     */
+    VCCERT_FIELD_TYPE_VELO_SCHEMA_MAX_OCCURRENCES = 0x00B1,
+    /**
+     * \brief Schema Min Value.
+     *
+     * For fields that have a definable value.
+     *
+     * \note this requires schema type to be defined.
+     */
+    VCCERT_FIELD_TYPE_VELO_SCHEMA_MIN_VALUE = 0x00B2,
+    /**
+     * \brief Schema Max Value.
+     *
+     * For fields that have a definable value.
+     *
+     * \note this requires schema type to be defined.
+     */
+    VCCERT_FIELD_TYPE_VELO_SCHEMA_MAX_VALUE = 0x00B3,
+    /**
+     * \brief Schema Min Length.
+     *
+     * For fields that have a variable length.
+     */
+    VCCERT_FIELD_TYPE_VELO_SCHEMA_MIN_LENGTH = 0x00B4,
+    /**
+     * \brief Schema Max Length.
+     *
+     * For fields that have a variable length.
+     */
+    VCCERT_FIELD_TYPE_VELO_SCHEMA_MAX_LENGTH = 0x00B5,
+    /**
+     * \brief Encoding for the stored data.
+     *
+     * Values to be determined.
+     */
+    VCCERT_FIELD_TYPE_VELO_SCHEMA_ENCODING = 0x00B6,
+    /**
+     * \brief Type of the given field.
+     *
+     * \see vccert_schema_type enumeration.
+     */
+    VCCERT_FIELD_TYPE_VELO_SCHEMA_TYPE = 0x00B7,
+    /**
+     * \brief Is this field required?
+     *
+     * Eight bit integer value:
+     *      - 0x00 False.
+     *      - 0x01 True.
+     */
+    VCCERT_FIELD_TYPE_VELO_SCHEMA_REQUIRED = 0x00B8,
+    /**
+     * \brief Number of decimal places for a fixpoint value.
+     */
+    VCCERT_FIELD_TYPE_VELO_SCHEMA_FIXPOINT_DECIMAL_PLACES = 0x00B9,
+
+    /* reserved schema fields 0x00Bx. */
     VCCERT_FIELD_TYPE_VELO_RESERVED_00BA = 0x00BA,
     VCCERT_FIELD_TYPE_VELO_RESERVED_00BB = 0x00BB,
     VCCERT_FIELD_TYPE_VELO_RESERVED_00BC = 0x00BC,
@@ -505,6 +557,7 @@ typedef enum vccert_field_type
     VCCERT_FIELD_TYPE_VELO_RESERVED_00BE = 0x00BE,
     VCCERT_FIELD_TYPE_VELO_RESERVED_00BF = 0x00BF,
 
+    /* reserved schema fields 0x00Cx. */
     VCCERT_FIELD_TYPE_VELO_RESERVED_00C0 = 0x00C0,
     VCCERT_FIELD_TYPE_VELO_RESERVED_00C1 = 0x00C1,
     VCCERT_FIELD_TYPE_VELO_RESERVED_00C2 = 0x00C2,
