@@ -48,6 +48,11 @@ extern const uint8_t vccert_certificate_type_uuid_txn[16];
 extern const uint8_t vccert_certificate_type_uuid_private_entity[16];
 
 /**
+ * \brief The Public Entity Certificate Type Identifier.
+ */
+extern const uint8_t vccert_certificate_type_uuid_public_entity[16];
+
+/**
  * \brief The Agent Subtype Identifier.
  */
 extern const uint8_t vccert_certificate_type_uuid_agent_subtype[16];
