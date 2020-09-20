@@ -429,6 +429,7 @@ TEST_F(vccert_parser_attest_test, missing_transaction_type)
         vccert_parser_attest(&failparser, 77, true));
 
     /* clean up. */
+    free(FAIL_CERT);
     dispose((disposable_t*)&failparser);
 }
 
@@ -460,6 +461,7 @@ TEST_F(vccert_parser_attest_test, missing_artifact_id)
         vccert_parser_attest(&failparser, 77, true));
 
     /* clean up. */
+    free(FAIL_CERT);
     dispose((disposable_t*)&failparser);
 }
 
