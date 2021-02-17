@@ -55,10 +55,11 @@ vccrypt = dependency(
 )
 
 vccert_include = include_directories('include')
+config_include = include_directories('.')
 
 vccert_lib = static_library('vccert', src,
   dependencies : [vcmodel, vpr, vccrypt],
-  include_directories : vccert_include
+  include_directories : [vccert_include, config_include]
 )
 
 vccert_dep = declare_dependency(
@@ -67,11 +68,19 @@ vccert_dep = declare_dependency(
 )
 
 vccert_test = executable('testvccert', test_src,
-  include_directories : vccert_include,
+  include_directories : [vccert_include, config_include],
   dependencies : [vpr, vccrypt, gtest],
   link_with : vccert_lib
 )
 
 test('vccert-test', vccert_test)
+
+conf_data = configuration_data()
+conf_data.set('VERSION', meson.project_version())
+configure_file(
+  input : 'config.h.in',
+  output : 'config.h',
+  configuration : conf_data
+)
 
 # vim: ts=2 sw=2 et colorcolumn=120
