@@ -3,7 +3,7 @@
  *
  * Test the vccert builder methods.
  *
- * \copyright 2017 Velo-Payments, Inc.  All rights reserved.
+ * \copyright 2017-2021 Velo-Payments, Inc.  All rights reserved.
  */
 
 #include <arpa/inet.h>
@@ -32,7 +32,7 @@ static int dummy_contract_resolver(
     void*, void*, const uint8_t*, const uint8_t*,
     vccert_contract_closure_t* closure);
 
-const size_t CERT_MAX_SIZE = 1024;
+const size_t CERT_MAX_SIZE = 65536;
 
 class vccert_builder_test : public ::testing::Test {
 protected:
@@ -487,6 +487,24 @@ TEST_F(vccert_builder_test, vccert_builder_add_buffer)
 
     //verify that the field value was written correctly
     EXPECT_EQ(0, memcmp(buf, VALUE, sizeof(VALUE)));
+}
+
+/**
+ * Test that a buffer larger than 32k can't be added... yet.
+ */
+TEST_F(vccert_builder_test, vccert_builder_add_buffer_too_big)
+{
+    const uint16_t FIELD = 0x1068;
+    uint8_t VALUE[VCCERT_MAX_FIELD_SIZE + 1];
+
+    /* Set value in buffer. */
+    memset(VALUE, 'a', sizeof(VALUE));
+
+    /* Attempt to add the buffer value.  It should fail with
+     * VCCERT_ERROR_BUILDER_ADD_TOO_BIG. */
+    EXPECT_EQ(
+        VCCERT_ERROR_BUILDER_ADD_TOO_BIG,
+        vccert_builder_add_short_buffer(&builder, FIELD, VALUE, sizeof(VALUE)));
 }
 
 /**
