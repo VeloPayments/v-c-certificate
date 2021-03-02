@@ -8,7 +8,7 @@
  * contract mode, in which a certificate must be strictly built following a
  * contract.
  *
- * \copyright 2017 Velo Payments, Inc.  All rights reserved.
+ * \copyright 2017-2021 Velo Payments, Inc.  All rights reserved.
  */
 
 #ifndef VCCERT_BUILDER_HEADER_GUARD
@@ -25,6 +25,11 @@
 #ifdef __cplusplus
 extern "C" {
 #endif  //__cplusplus
+
+/**
+ * The maximum supported field size.
+ */
+#define VCCERT_MAX_FIELD_SIZE   ((size_t)(0x7FFF))
 
 /**
  * \brief The builder options structure is used to manage options needed to

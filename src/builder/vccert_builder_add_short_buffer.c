@@ -3,7 +3,7 @@
  *
  * Add a buffer field to a certificate.
  *
- * \copyright 2017 Velo Payments, Inc.  All rights reserved.
+ * \copyright 2017-2021 Velo Payments, Inc.  All rights reserved.
  */
 
 #include <cbmc/model_assert.h>
@@ -34,20 +34,29 @@ int vccert_builder_add_short_buffer(
     MODEL_ASSERT(context != NULL);
     MODEL_ASSERT(context->buffer.data != NULL);
     MODEL_ASSERT(context->offset + field_size <= context->buffer.size);
+    MODEL_ASSERT(field_size <= VCCERT_MAX_FIELD_SIZE);
 
-    if (context == NULL || context->buffer.data == NULL || context->buffer.size < context->offset + field_size)
+    /* verify that the parameters are valid. */
+    if (context == NULL || context->buffer.data == NULL
+     || context->buffer.size < context->offset + field_size)
     {
         return VCCERT_ERROR_BUILDER_ADD_INVALID_ARG;
     }
 
-    //write field header
+    /* verify that the field does not exceed the max supported field size. */
+    if (field_size > VCCERT_MAX_FIELD_SIZE)
+    {
+        return VCCERT_ERROR_BUILDER_ADD_TOO_BIG;
+    }
+
+    /* write field header. */
     vccert_builder_write_fieldheader(context, field, size);
 
-    //write the value to the buffer
+    /* write the value to the buffer. */
     uint8_t* out = ((uint8_t*)context->buffer.data) + context->offset;
     memcpy(out, value, size);
 
-    //increment the offset
+    /* increment the offset. */
     context->offset += size;
 
     return VCCERT_STATUS_SUCCESS;

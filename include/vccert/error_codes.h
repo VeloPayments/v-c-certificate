@@ -3,7 +3,7 @@
  *
  * \brief Error codes for vccert.
  *
- * \copyright 2018 Velo Payments, Inc.  All rights reserved.
+ * \copyright 2018-2021 Velo Payments, Inc.  All rights reserved.
  */
 
 #ifndef VCCERT_ERROR_CODES_HEADER_GUARD
@@ -154,6 +154,11 @@ extern "C" {
  * \brief An invalid argument was provided to vccert_builder_add_*().
  */
 #define VCCERT_ERROR_BUILDER_ADD_INVALID_ARG 0x3134
+
+/**
+ * \brief The field was too big to add to the builder.
+ */
+#define VCCERT_ERROR_BUILDER_ADD_TOO_BIG 0x3135
 
 /**
  * @}
