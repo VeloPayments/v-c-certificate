@@ -609,7 +609,21 @@ typedef enum vccert_field_type
     VCCERT_FIELD_TYPE_VELO_RESERVED_00EE = 0x00EE,
     VCCERT_FIELD_TYPE_VELO_RESERVED_00EF = 0x00EF,
 
-    VCCERT_FIELD_TYPE_VELO_RESERVED_00F0 = 0x00F0,
+    /* Endorsement fields. 0x00F0 - 0x00FF. */
+
+    /**
+     * \brief An endorsement is a special type of grant. It is made up of three
+     * UUIDs.
+     *
+     * Subject UUID: the subject of the grant.
+     * Verb UUID: the verb of the grant.
+     * Object UUID: the object of the grant.
+     *
+     * SUBJECT is granted the ability of performing VERB on OBJECT.
+     *
+     * Example: CLIENT_A can SUBMIT_TRANSACTIONS using AGENTD_INSTANCE_B.
+     */
+    VCCERT_FIELD_TYPE_VELO_ENDORSEMENT   = 0x00F0,
     VCCERT_FIELD_TYPE_VELO_RESERVED_00F1 = 0x00F1,
     VCCERT_FIELD_TYPE_VELO_RESERVED_00F2 = 0x00F2,
     VCCERT_FIELD_TYPE_VELO_RESERVED_00F3 = 0x00F3,
