@@ -8,7 +8,7 @@
  * contract mode, in which a certificate must be strictly parsed following a
  * contract.
  *
- * \copyright 2017-2018 Velo Payments, Inc.  All rights reserved.
+ * \copyright 2017-2022 Velo Payments, Inc.  All rights reserved.
  */
 
 #ifndef VCCERT_PARSER_HEADER_GUARD
@@ -332,6 +332,34 @@ int vccert_parser_options_init(
     vccert_parser_artifact_state_resolver_t artifact_state,
     vccert_parser_contract_resolver_t contract_resolver,
     vccert_parser_entity_key_resolver_t key_resolver, void* context);
+
+/**
+ * \brief Initialize a parser options structure using the given allocator,
+ * and crypto suite. This is a simplified initialization method, and the
+ * resulting parser will always fail attestation.
+ *
+ * This options structure is owned by the caller and must be disposed of when no
+ * longer needed by calling dispose().
+ *
+ * \param options           The options structure to initialize.
+ * \param alloc_opts        The allocator options to use for this structure.
+ * \param crypto_suite      The crypto suite to use for this structure.
+ * \param txn_resolver      The transaction resolver to use for this structure.
+ * \param artifact_state    The artifact state resolver to use for this
+ *                          structure.
+ * \param contract_resolver The contract resolver to use for this structure.
+ * \param key_resolver      The entity key resolver to use for this structure.
+ * \param context           The user-specific context to use for this structure.
+ *
+ * \returns a status code indicating success or failure.
+ *      - \ref VCCERT_STATUS_SUCCESS on success.
+ *      - \ref VCCERT_ERROR_PARSER_OPTIONS_INIT_INVALID_ARG if an invalid
+ *        argument was passed to vccert_parser_options_init().
+ *      - a non-zero error code on failure.
+ */
+int vccert_parser_options_simple_init(
+    vccert_parser_options_t* options, allocator_options_t* alloc_opts,
+    vccrypt_suite_options_t* crypto_suite);
 
 /**
  * \brief Initialize a parser context structure using the given options.
