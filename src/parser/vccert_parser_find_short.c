@@ -71,7 +71,7 @@ int vccert_parser_find_short(
     {
         *size = 0;
         *value = NULL;
-        retval = 1;
+        retval = VCCERT_ERROR_PARSER_FIELD_NEXT_FIELD_NOT_FOUND;
     }
 
     return retval;
