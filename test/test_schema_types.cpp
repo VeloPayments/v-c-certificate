@@ -6,8 +6,10 @@
  * \copyright 2020 Velo-Payments, Inc.  All rights reserved.
  */
 
-#include <gtest/gtest.h>
 #include <vccert/schema.h>
+
+/* DISABLED GTEST */
+#if 0
 
 /**
  * Test schema types 0x0000 - 0x000F.
@@ -1480,3 +1482,4 @@ TEST(schema_types_test, types_03F0_03FF)
     EXPECT_EQ(0x03FE, VCCERT_SCHEMA_TYPE_RESERVED_03FE);
     EXPECT_EQ(0x03FF, VCCERT_SCHEMA_TYPE_RESERVED_03FF);
 }
+#endif

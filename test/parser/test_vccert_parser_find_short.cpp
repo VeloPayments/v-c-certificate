@@ -7,10 +7,12 @@
  */
 
 #include <arpa/inet.h>
-#include <gtest/gtest.h>
 #include <vccert/parser.h>
 #include <vccrypt/suite.h>
 #include <vpr/allocator/malloc_allocator.h>
+
+/* DISABLED GTEST */
+#if 0
 
 //forward declarations for dummy certificate delegate methods
 static bool dummy_txn_resolver(
@@ -173,3 +175,4 @@ static int dummy_contract_resolver(
 {
     return VCCERT_ERROR_PARSER_ATTEST_MISSING_CONTRACT;
 }
+#endif

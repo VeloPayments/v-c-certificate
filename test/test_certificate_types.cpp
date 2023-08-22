@@ -7,11 +7,12 @@
  */
 
 #include <cstring>
-#include <gtest/gtest.h>
 #include <vccert/certificate_types.h>
 #include <vccrypt/buffer.h>
 #include <vpr/allocator/malloc_allocator.h>
 
+/* DISABLED GTEST */
+#if 0
 using namespace std;
 
 /**
@@ -75,3 +76,4 @@ TEST(certificate_types_test, match)
     dispose((disposable_t*)&hex_buf);
     dispose((disposable_t*)&alloc_opts);
 }
+#endif

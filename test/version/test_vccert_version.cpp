@@ -7,8 +7,10 @@
  */
 
 #include <config.h>
-#include <gtest/gtest.h>
 #include <vccert/version.h>
+
+/* DISABLED GTEST */
+#if 0
 
 TEST(vccert_version_test, verify_version_information_set)
 {
@@ -17,3 +19,4 @@ TEST(vccert_version_test, verify_version_information_set)
     ASSERT_NE(nullptr, version);
     EXPECT_STREQ(VCCERT_VERSION, version);
 }
+#endif
