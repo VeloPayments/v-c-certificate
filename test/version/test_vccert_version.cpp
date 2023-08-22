@@ -3,20 +3,20 @@
  *
  * Unit tests for vccert_version.
  *
- * \copyright 2021 Velo Payments, Inc.  All rights reserved.
+ * \copyright 2021-2023 Velo Payments, Inc.  All rights reserved.
  */
 
 #include <config.h>
+#include <minunit/minunit.h>
+#include <string.h>
 #include <vccert/version.h>
 
-/* DISABLED GTEST */
-#if 0
+TEST_SUITE(vccert_version_test);
 
-TEST(vccert_version_test, verify_version_information_set)
+TEST(verify_version_information_set)
 {
     const char* version = vccert_version();
 
-    ASSERT_NE(nullptr, version);
-    EXPECT_STREQ(VCCERT_VERSION, version);
+    TEST_ASSERT(nullptr != version);
+    TEST_EXPECT(!strcmp(VCCERT_VERSION, version));
 }
-#endif
