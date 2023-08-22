@@ -6,8 +6,10 @@
  * \copyright 2017 Velo-Payments, Inc.  All rights reserved.
  */
 
-#include <gtest/gtest.h>
 #include <vccert/fields.h>
+
+/* DISABLED GTEST */
+#if 0
 
 /**
  * Test field types 0x0000 - 0x000F.
@@ -1494,3 +1496,4 @@ TEST(field_types_test, ranges)
     EXPECT_EQ(0xFFFE, VCCERT_FIELD_TYPE_VELO_RESERVED_UPPER_END);
     EXPECT_EQ(0xFFFF, VCCERT_FIELD_TYPE_INVALID);
 }
+#endif

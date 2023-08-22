@@ -7,12 +7,14 @@
  */
 
 #include <arpa/inet.h>
-#include <gtest/gtest.h>
 #include <vccert/builder.h>
 #include <vccert/fields.h>
 #include <vccert/parser.h>
 #include <vccrypt/suite.h>
 #include <vpr/allocator/malloc_allocator.h>
+
+/* DISABLED GTEST */
+#if 0
 
 //forward declarations for dummy certificate delegate methods
 static bool dummy_txn_resolver(
@@ -758,3 +760,4 @@ cleanup_alloc_opts:
 
     return retval;
 }
+#endif

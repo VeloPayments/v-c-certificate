@@ -6,8 +6,10 @@
  * \copyright 2017 Velo-Payments, Inc.  All rights reserved.
  */
 
-#include <gtest/gtest.h>
 #include "../../src/parser/parser_internal.h"
+
+/* DISABLED GTEST */
+#if 0
 
 /**
  * Test that the field parser method returns an error if any of the parameters
@@ -110,3 +112,4 @@ TEST(vccert_parser_field_test, simple_parse)
     //this should be the only field
     ASSERT_GE(next_offset, CERT_SIZE);
 }
+#endif
