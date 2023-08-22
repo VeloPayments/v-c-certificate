@@ -3,16 +3,15 @@
  *
  * Test vccert_parser_field_first and vccert_parser_field_next.
  *
- * \copyright 2017 Velo-Payments, Inc.  All rights reserved.
+ * \copyright 2017-2023 Velo-Payments, Inc.  All rights reserved.
  */
 
 #include <arpa/inet.h>
+#include <minunit/minunit.h>
+#include <string.h>
 #include <vccert/parser.h>
 #include <vccrypt/suite.h>
 #include <vpr/allocator/malloc_allocator.h>
-
-/* DISABLED GTEST */
-#if 0
 
 //forward declarations for dummy certificate delegate methods
 static bool dummy_txn_resolver(
@@ -36,9 +35,9 @@ static const uint8_t* TEST_CERT = (const uint8_t*)
     "\x17\x35\x00\x01\x01";
 static const size_t TEST_CERT_SIZE = 30;
 
-class vccert_parser_field_first_next_test : public ::testing::Test {
-protected:
-    void SetUp() override
+class vccert_parser_field_first_next_test {
+public:
+    void setUp()
     {
         vccrypt_suite_register_velo_v1();
 
@@ -58,7 +57,7 @@ protected:
             vccert_parser_init(&options, &parser, TEST_CERT, TEST_CERT_SIZE);
     }
 
-    void TearDown() override
+    void tearDown()
     {
         if (options_init_result == 0)
         {
@@ -86,21 +85,31 @@ protected:
     vccert_parser_context_t parser;
 };
 
+TEST_SUITE(vccert_parser_field_first_next_test);
+
+#define BEGIN_TEST_F(name) \
+TEST(name) \
+{ \
+    vccert_parser_field_first_next_test fixture; \
+    fixture.setUp();
+
+#define END_TEST_F() \
+    fixture.tearDown(); \
+}
+
 /**
  * Sanity test of external dependencies.
  */
-TEST_F(vccert_parser_field_first_next_test, external_dependencies)
-{
-    ASSERT_EQ(0, options_init_result);
-    ASSERT_EQ(0, suite_init_result);
-    ASSERT_EQ(0, parser_init_result);
-}
+BEGIN_TEST_F(external_dependencies)
+    TEST_ASSERT(0 == fixture.options_init_result);
+    TEST_ASSERT(0 == fixture.suite_init_result);
+    TEST_ASSERT(0 == fixture.parser_init_result);
+END_TEST_F()
 
 /**
  * Test that we can read the first field and each subsequent field.
  */
-TEST_F(vccert_parser_field_first_next_test, field_search)
-{
+BEGIN_TEST_F(field_search)
     uint16_t field_id;
     const uint8_t* value;
     size_t size;
@@ -108,30 +117,42 @@ TEST_F(vccert_parser_field_first_next_test, field_search)
     uint32_t field1_val;
 
     //The first field is 0x0001
-    ASSERT_EQ(0, vccert_parser_field_first(&parser, &field_id, &value, &size));
-    ASSERT_EQ(0x0001, field_id);
-    ASSERT_EQ(4U, size);
-    ASSERT_NE((const uint8_t*)NULL, value);
+    TEST_ASSERT(
+        0
+            == vccert_parser_field_first(
+                    &fixture.parser, &field_id, &value, &size));
+    TEST_ASSERT(0x0001 == field_id);
+    TEST_ASSERT(4U == size);
+    TEST_ASSERT((const uint8_t*)NULL != value);
     memcpy(&field1_val, value, sizeof(uint32_t));
-    EXPECT_EQ(0x01020304UL, htonl(field1_val));
+    TEST_EXPECT(0x01020304UL == htonl(field1_val));
 
     //The next field is 0x1002
-    ASSERT_EQ(0, vccert_parser_field_next(&parser, &field_id, &value, &size));
-    ASSERT_EQ(0x1002, field_id);
-    ASSERT_EQ(13U, size);
-    ASSERT_NE((const uint8_t*)NULL, value);
-    EXPECT_EQ(0, memcmp(value, "Testing 1 2 3", size));
+    TEST_ASSERT(
+        0
+            == vccert_parser_field_next(
+                    &fixture.parser, &field_id, &value, &size));
+    TEST_ASSERT(0x1002 == field_id);
+    TEST_ASSERT(13U == size);
+    TEST_ASSERT((const uint8_t*)NULL != value);
+    TEST_EXPECT(0 == memcmp(value, "Testing 1 2 3", size));
 
     //find field 0x1735
-    ASSERT_EQ(0, vccert_parser_field_next(&parser, &field_id, &value, &size));
-    ASSERT_EQ(0x1735, field_id);
-    ASSERT_EQ(1U, size);
-    ASSERT_NE((const uint8_t*)NULL, value);
-    EXPECT_EQ(0x01, *value);
+    TEST_ASSERT(
+        0
+            == vccert_parser_field_next(
+                    &fixture.parser, &field_id, &value, &size));
+    TEST_ASSERT(0x1735 == field_id);
+    TEST_ASSERT(1U == size);
+    TEST_ASSERT((const uint8_t*)NULL != value);
+    TEST_EXPECT(0x01 == *value);
 
     //no more fields
-    ASSERT_NE(0, vccert_parser_field_next(&parser, &field_id, &value, &size));
-}
+    TEST_ASSERT(
+        0
+            != vccert_parser_field_next(
+                    &fixture.parser, &field_id, &value, &size));
+END_TEST_F()
 
 /**
  * Dummy transaction resolver.
@@ -171,4 +192,3 @@ static int dummy_contract_resolver(
 {
     return VCCERT_ERROR_PARSER_ATTEST_MISSING_CONTRACT;
 }
-#endif
