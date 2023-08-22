@@ -3,15 +3,13 @@
  *
  * Test the vccert_parser_init function.
  *
- * \copyright 2017 Velo-Payments, Inc.  All rights reserved.
+ * \copyright 2017-2023 Velo-Payments, Inc.  All rights reserved.
  */
 
+#include <minunit/minunit.h>
 #include <vccert/parser.h>
 #include <vccrypt/suite.h>
 #include <vpr/allocator/malloc_allocator.h>
-
-/* DISABLED GTEST */
-#if 0
 
 //forward declarations for dummy certificate delegate methods
 static bool dummy_txn_resolver(
@@ -26,9 +24,9 @@ static int dummy_contract_resolver(
     void*, void*, const uint8_t*, const uint8_t*,
     vccert_contract_closure_t* closure);
 
-class vccert_parser_init_test : public ::testing::Test {
-protected:
-    void SetUp() override
+class vccert_parser_init_test {
+public:
+    void setUp()
     {
         vccrypt_suite_register_velo_v1();
 
@@ -45,7 +43,7 @@ protected:
                 &dummy_entity_key_resolver, &dummy_context);
     }
 
-    void TearDown() override
+    void tearDown()
     {
         if (options_init_result == 0)
         {
@@ -67,65 +65,72 @@ protected:
     vccert_parser_options_t options;
 };
 
+TEST_SUITE(vccert_parser_init_test);
+
+#define BEGIN_TEST_F(name) \
+TEST(name) \
+{ \
+    vccert_parser_init_test fixture; \
+    fixture.setUp();
+
+#define END_TEST_F() \
+    fixture.tearDown(); \
+}
+
 /**
  * Sanity test of external dependencies.
  */
-TEST_F(vccert_parser_init_test, external_dependencies)
-{
-    ASSERT_EQ(0, options_init_result);
-    ASSERT_EQ(0, suite_init_result);
-}
+BEGIN_TEST_F(external_dependencies)
+    TEST_ASSERT(0 == fixture.options_init_result);
+    TEST_ASSERT(0 == fixture.suite_init_result);
+END_TEST_F()
 
 /**
  * Test parameter checking for init.
  */
-TEST_F(vccert_parser_init_test, parameter_checks)
-{
+BEGIN_TEST_F(parameter_checks)
     vccert_parser_context_t context;
     const uint8_t* cert = (const uint8_t*)"1234";
     size_t size = 4;
 
     //test the null check for the options structure
-    ASSERT_NE(0,
-        vccert_parser_init(NULL, &context, cert, size));
+    TEST_ASSERT(0 != vccert_parser_init(NULL, &context, cert, size));
 
     //test the null check for the context structure
-    ASSERT_NE(0,
-        vccert_parser_init(&options, NULL, cert, size));
+    TEST_ASSERT(0 != vccert_parser_init(&fixture.options, NULL, cert, size));
 
     //test the null check for the certificate buffer
-    ASSERT_NE(0,
-        vccert_parser_init(&options, &context, NULL, size));
+    TEST_ASSERT(
+        0 != vccert_parser_init(&fixture.options, &context, NULL, size));
 
     //test the zero check for the size
-    ASSERT_NE(0,
-        vccert_parser_init(&options, &context, cert, 0));
-}
+    TEST_ASSERT(0 != vccert_parser_init(&fixture.options, &context, cert, 0));
+END_TEST_F()
 
 /**
  * Test that the parser context structure is set correctly.
  */
-TEST_F(vccert_parser_init_test, init)
-{
+BEGIN_TEST_F(init)
     vccert_parser_context_t context;
     const uint8_t* cert = (const uint8_t*)"1234";
     size_t size = 4;
 
     //init should return 0 on success
-    ASSERT_EQ(0,
-        vccert_parser_init(&options, &context, cert, size));
+    TEST_ASSERT(
+        0
+            == vccert_parser_init(&fixture.options, &context, cert, size));
 
-    EXPECT_NE((dispose_method_t)NULL, context.hdr.dispose);
-    EXPECT_EQ(&options, context.options);
-    EXPECT_EQ(cert, context.cert);
-    EXPECT_EQ(size, context.raw_size);
-    EXPECT_EQ(size, context.size);
-    EXPECT_EQ(NULL, context.parent_buffer.data);
-    EXPECT_EQ(0U, context.parent_buffer.size);
-    EXPECT_EQ(NULL, context.parent);
+    TEST_EXPECT((dispose_method_t)NULL != context.hdr.dispose);
+    TEST_EXPECT(&fixture.options == context.options);
+    TEST_EXPECT(cert == context.cert);
+    TEST_EXPECT(size == context.raw_size);
+    TEST_EXPECT(size == context.size);
+    TEST_EXPECT(NULL == context.parent_buffer.data);
+    TEST_EXPECT(0U == context.parent_buffer.size);
+    TEST_EXPECT(NULL == context.parent);
 
     dispose((disposable_t*)&context);
-}
+END_TEST_F()
 
 /**
  * Dummy transaction resolver.
@@ -165,4 +170,3 @@ static int dummy_contract_resolver(
 {
     return VCCERT_ERROR_PARSER_ATTEST_MISSING_CONTRACT;
 }
-#endif
