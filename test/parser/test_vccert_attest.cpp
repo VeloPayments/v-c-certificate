@@ -3,18 +3,17 @@
  *
  * Test vccert_attest.
  *
- * \copyright 2017 Velo-Payments, Inc.  All rights reserved.
+ * \copyright 2017-2023 Velo-Payments, Inc.  All rights reserved.
  */
 
 #include <arpa/inet.h>
+#include <minunit/minunit.h>
+#include <string.h>
 #include <vccert/builder.h>
 #include <vccert/fields.h>
 #include <vccert/parser.h>
 #include <vccrypt/suite.h>
 #include <vpr/allocator/malloc_allocator.h>
-
-/* DISABLED GTEST */
-#if 0
 
 //forward declarations for dummy certificate delegate methods
 static bool dummy_txn_resolver(
@@ -38,17 +37,19 @@ static int create_signed_certificate(
     uint8_t** cert,
     size_t* cert_size);
 
-static const uint8_t* PRIVATE_KEY = (const uint8_t*)"\x65\x93\x21\xd0\x35\xa9\xf8\xcf"
-                                                    "\x35\x37\xd1\xd1\x82\xfd\xee\xf8"
-                                                    "\x92\x8e\x0c\xfe\xb4\x56\x4b\x2d"
-                                                    "\xb5\x11\x60\x6d\xc6\xf6\x13\xbd"
-                                                    "\x47\x83\xe9\xf6\x78\xd1\x49\xac"
-                                                    "\xd2\x09\x66\xb0\xab\x88\xf7\xd0"
-                                                    "\x5d\x6d\x4f\x54\x0f\x1f\x23\x82"
-                                                    "\x86\x00\x3a\xda\x0c\x27\xcc\x35";
+static const uint8_t* PRIVATE_KEY =
+    (const uint8_t*)"\x65\x93\x21\xd0\x35\xa9\xf8\xcf"
+                    "\x35\x37\xd1\xd1\x82\xfd\xee\xf8"
+                    "\x92\x8e\x0c\xfe\xb4\x56\x4b\x2d"
+                    "\xb5\x11\x60\x6d\xc6\xf6\x13\xbd"
+                    "\x47\x83\xe9\xf6\x78\xd1\x49\xac"
+                    "\xd2\x09\x66\xb0\xab\x88\xf7\xd0"
+                    "\x5d\x6d\x4f\x54\x0f\x1f\x23\x82"
+                    "\x86\x00\x3a\xda\x0c\x27\xcc\x35";
 
-static const uint8_t* SIGNER_ID = (const uint8_t*)"\x71\x1f\x22\x65\xb6\x50\x46\x12"
-                                                  "\xa7\x3a\xad\x82\x7f\xb2\x71\x18";
+static const uint8_t* SIGNER_ID =
+    (const uint8_t*)"\x71\x1f\x22\x65\xb6\x50\x46\x12"
+                    "\xa7\x3a\xad\x82\x7f\xb2\x71\x18";
 
 static const uint8_t* TEST_CERT = (const uint8_t*)
     //certificate version
@@ -91,19 +92,21 @@ static const uint8_t* TEST_CERT = (const uint8_t*)
 
 static const size_t TEST_CERT_SIZE = 246;
 
-static const uint8_t* SIGNING_KEY = (const uint8_t*)"\x47\x83\xe9\xf6\x78\xd1\x49\xac"
-                                                    "\xd2\x09\x66\xb0\xab\x88\xf7\xd0"
-                                                    "\x5d\x6d\x4f\x54\x0f\x1f\x23\x82"
-                                                    "\x86\x00\x3a\xda\x0c\x27\xcc\x35";
+static const uint8_t* SIGNING_KEY =
+    (const uint8_t*)"\x47\x83\xe9\xf6\x78\xd1\x49\xac"
+                    "\xd2\x09\x66\xb0\xab\x88\xf7\xd0"
+                    "\x5d\x6d\x4f\x54\x0f\x1f\x23\x82"
+                    "\x86\x00\x3a\xda\x0c\x27\xcc\x35";
 
-static const uint8_t* NULL_KEY = (const uint8_t*)"\x00\x00\x00\x00\x00\x00\x00\x00"
-                                                 "\x00\x00\x00\x00\x00\x00\x00\x00"
-                                                 "\x00\x00\x00\x00\x00\x00\x00\x00"
-                                                 "\x00\x00\x00\x00\x00\x00\x00\x00";
+static const uint8_t* NULL_KEY =
+    (const uint8_t*)"\x00\x00\x00\x00\x00\x00\x00\x00"
+                    "\x00\x00\x00\x00\x00\x00\x00\x00"
+                    "\x00\x00\x00\x00\x00\x00\x00\x00"
+                    "\x00\x00\x00\x00\x00\x00\x00\x00";
 
-class vccert_parser_attest_test : public ::testing::Test {
-protected:
-    void SetUp() override
+class vccert_parser_attest_test {
+public:
+    void setUp()
     {
         vccrypt_suite_register_velo_v1();
 
@@ -123,7 +126,7 @@ protected:
             vccert_parser_init(&options, &parser, TEST_CERT, TEST_CERT_SIZE);
     }
 
-    void TearDown() override
+    void tearDown()
     {
         if (options_init_result == 0)
         {
@@ -151,58 +154,67 @@ protected:
     vccert_parser_context_t parser;
 };
 
+TEST_SUITE(vccert_parser_attest_test);
+
+#define BEGIN_TEST_F(name) \
+TEST(name) \
+{ \
+    vccert_parser_attest_test fixture; \
+    fixture.setUp();
+
+#define END_TEST_F() \
+    fixture.tearDown(); \
+}
+
 /**
  * Sanity test of external dependencies.
  */
-TEST_F(vccert_parser_attest_test, external_dependencies)
-{
-    ASSERT_EQ(0, options_init_result);
-    ASSERT_EQ(0, suite_init_result);
-    ASSERT_EQ(0, parser_init_result);
-}
+BEGIN_TEST_F(external_dependencies)
+    TEST_ASSERT(0 == fixture.options_init_result);
+    TEST_ASSERT(0 == fixture.suite_init_result);
+    TEST_ASSERT(0 == fixture.parser_init_result);
+END_TEST_F()
 
 /**
  * Simple happy path attestation.
  */
-TEST_F(vccert_parser_attest_test, happy_path)
-{
+BEGIN_TEST_F(happy_path)
     //the size and raw size should be the same
-    ASSERT_EQ(TEST_CERT_SIZE, parser.raw_size);
-    ASSERT_EQ(TEST_CERT_SIZE, parser.size);
+    TEST_ASSERT(TEST_CERT_SIZE == fixture.parser.raw_size);
+    TEST_ASSERT(TEST_CERT_SIZE == fixture.parser.size);
 
     //attestation should succeed
-    ASSERT_EQ(0, vccert_parser_attest(&parser, 77, true));
+    TEST_ASSERT(0 == vccert_parser_attest(&fixture.parser, 77, true));
 
     //the new size should exclude the signature field.
-    ASSERT_EQ(TEST_CERT_SIZE, parser.raw_size);
-    ASSERT_EQ(TEST_CERT_SIZE - 68, parser.size);
-}
+    TEST_ASSERT(TEST_CERT_SIZE == fixture.parser.raw_size);
+    TEST_ASSERT(TEST_CERT_SIZE - 68 == fixture.parser.size);
+END_TEST_F()
 
 /**
  * Demonstrate that contract validation can be bypassed.
  */
-TEST_F(vccert_parser_attest_test, bypass_contract)
-{
+BEGIN_TEST_F(bypass_contract)
     //the size and raw size should be the same
-    ASSERT_EQ(TEST_CERT_SIZE, parser.raw_size);
-    ASSERT_EQ(TEST_CERT_SIZE, parser.size);
+    TEST_ASSERT(TEST_CERT_SIZE == fixture.parser.raw_size);
+    TEST_ASSERT(TEST_CERT_SIZE == fixture.parser.size);
 
     //switch contract resolver to something that always returns a fail contract.
-    parser.options->parser_options_contract_resolver = &fail_contract_resolver;
+    fixture.parser.options->parser_options_contract_resolver =
+        &fail_contract_resolver;
 
     //attestation should succeed
-    ASSERT_EQ(0, vccert_parser_attest(&parser, 77, false));
+    TEST_ASSERT(0 == vccert_parser_attest(&fixture.parser, 77, false));
 
     //the new size should exclude the signature field.
-    ASSERT_EQ(TEST_CERT_SIZE, parser.raw_size);
-    ASSERT_EQ(TEST_CERT_SIZE - 68, parser.size);
-}
+    TEST_ASSERT(TEST_CERT_SIZE == fixture.parser.raw_size);
+    TEST_ASSERT(TEST_CERT_SIZE - 68 == fixture.parser.size);
+END_TEST_F()
 
 /**
  * A certificate without a signer UUID fails attestation.
  */
-TEST_F(vccert_parser_attest_test, missing_signer_id)
-{
+BEGIN_TEST_F(missing_signer_id)
     vccert_parser_context_t failparser;
 
     const uint8_t FAIL_CERT[] = {
@@ -248,24 +260,26 @@ TEST_F(vccert_parser_attest_test, missing_signer_id)
     };
 
     /* creating our fail parser should succeed. */
-    ASSERT_EQ(VCCERT_STATUS_SUCCESS,
-        vccert_parser_init(
-            &options, &failparser, FAIL_CERT, sizeof(FAIL_CERT)));
+    TEST_ASSERT(
+        VCCERT_STATUS_SUCCESS
+            == vccert_parser_init(
+                    &fixture.options, &failparser, FAIL_CERT,
+                    sizeof(FAIL_CERT)));
 
     /* attestation should fail with
      * VCCERT_ERROR_PARSER_ATTEST_MISSING_SIGNER_UUID */
-    EXPECT_EQ(VCCERT_ERROR_PARSER_ATTEST_MISSING_SIGNER_UUID,
-        vccert_parser_attest(&failparser, 77, false));
+    TEST_EXPECT(
+        VCCERT_ERROR_PARSER_ATTEST_MISSING_SIGNER_UUID
+            == vccert_parser_attest(&failparser, 77, false));
 
     /* clean up. */
     dispose((disposable_t*)&failparser);
-}
+END_TEST_F()
 
 /**
  * A certificate without a signature fails attestation.
  */
-TEST_F(vccert_parser_attest_test, missing_signature)
-{
+BEGIN_TEST_F(missing_signature)
     vccert_parser_context_t failparser;
 
     const uint8_t FAIL_CERT[] = {
@@ -315,24 +329,26 @@ TEST_F(vccert_parser_attest_test, missing_signature)
     };
 
     /* creating our fail parser should succeed. */
-    ASSERT_EQ(VCCERT_STATUS_SUCCESS,
-        vccert_parser_init(
-            &options, &failparser, FAIL_CERT, sizeof(FAIL_CERT)));
+    TEST_ASSERT(
+        VCCERT_STATUS_SUCCESS
+            == vccert_parser_init(
+                    &fixture.options, &failparser, FAIL_CERT,
+                    sizeof(FAIL_CERT)));
 
     /* attestation should fail with
      * VCCERT_ERROR_PARSER_ATTEST_MISSING_SIGNATURE */
-    EXPECT_EQ(VCCERT_ERROR_PARSER_ATTEST_MISSING_SIGNATURE,
-        vccert_parser_attest(&failparser, 77, false));
+    TEST_EXPECT(
+        VCCERT_ERROR_PARSER_ATTEST_MISSING_SIGNATURE
+            == vccert_parser_attest(&failparser, 77, false));
 
     /* clean up. */
     dispose((disposable_t*)&failparser);
-}
+END_TEST_F()
 
 /**
  * A certificate with a bad signature fails attestation.
  */
-TEST_F(vccert_parser_attest_test, bad_signature)
-{
+BEGIN_TEST_F(bad_signature)
     vccert_parser_context_t failparser;
 
     const uint8_t FAIL_CERT[] = {
@@ -390,82 +406,89 @@ TEST_F(vccert_parser_attest_test, bad_signature)
     };
 
     /* creating our fail parser should succeed. */
-    ASSERT_EQ(VCCERT_STATUS_SUCCESS,
-        vccert_parser_init(
-            &options, &failparser, FAIL_CERT, sizeof(FAIL_CERT)));
+    TEST_ASSERT(
+        VCCERT_STATUS_SUCCESS
+            == vccert_parser_init(
+                    &fixture.options, &failparser, FAIL_CERT,
+                    sizeof(FAIL_CERT)));
 
     /* attestation should fail with
      * VCCERT_ERROR_PARSER_ATTEST_SIGNATURE_MISMATCH */
-    EXPECT_EQ(VCCERT_ERROR_PARSER_ATTEST_SIGNATURE_MISMATCH,
-        vccert_parser_attest(&failparser, 77, false));
+    TEST_EXPECT(
+        VCCERT_ERROR_PARSER_ATTEST_SIGNATURE_MISMATCH
+            == vccert_parser_attest(&failparser, 77, false));
 
     /* clean up. */
     dispose((disposable_t*)&failparser);
-}
+END_TEST_F()
 
 /**
  * A certificate with a missing transaction type fails attestation, if
  * verifyContract is true.
  */
-TEST_F(vccert_parser_attest_test, missing_transaction_type)
-{
+BEGIN_TEST_F(missing_transaction_type)
     vccert_parser_context_t failparser;
 
     uint8_t* FAIL_CERT = 0;
     size_t FAIL_CERT_SIZE = 0;
 
     /* we should be able to create a signed certificate. */
-    ASSERT_EQ(VCCERT_STATUS_SUCCESS,
-        create_signed_certificate(
-            true, VCCERT_FIELD_TYPE_TRANSACTION_TYPE,
-            &FAIL_CERT, &FAIL_CERT_SIZE));
+    TEST_ASSERT(
+        VCCERT_STATUS_SUCCESS
+            == create_signed_certificate(
+                    true, VCCERT_FIELD_TYPE_TRANSACTION_TYPE, &FAIL_CERT,
+                    &FAIL_CERT_SIZE));
 
     /* creating our fail parser should succeed. */
-    ASSERT_EQ(VCCERT_STATUS_SUCCESS,
-        vccert_parser_init(
-            &options, &failparser, FAIL_CERT, FAIL_CERT_SIZE));
+    TEST_ASSERT(
+        VCCERT_STATUS_SUCCESS
+            == vccert_parser_init(
+                    &fixture.options, &failparser, FAIL_CERT, FAIL_CERT_SIZE));
 
     /* attestation should fail with
      * VCCERT_ERROR_PARSER_ATTEST_MISSING_TRANSACTION_TYPE */
-    EXPECT_EQ(VCCERT_ERROR_PARSER_ATTEST_MISSING_TRANSACTION_TYPE,
-        vccert_parser_attest(&failparser, 77, true));
+    TEST_EXPECT(
+        VCCERT_ERROR_PARSER_ATTEST_MISSING_TRANSACTION_TYPE
+            == vccert_parser_attest(&failparser, 77, true));
 
     /* clean up. */
     free(FAIL_CERT);
     dispose((disposable_t*)&failparser);
-}
+END_TEST_F()
 
 /**
  * A certificate with a missing artifact id fails attestation, if
  * verifyContract is true.
  */
-TEST_F(vccert_parser_attest_test, missing_artifact_id)
-{
+BEGIN_TEST_F(missing_artifact_id)
     vccert_parser_context_t failparser;
 
     uint8_t* FAIL_CERT = 0;
     size_t FAIL_CERT_SIZE = 0;
 
     /* we should be able to create a signed certificate. */
-    ASSERT_EQ(VCCERT_STATUS_SUCCESS,
-        create_signed_certificate(
-            true, VCCERT_FIELD_TYPE_ARTIFACT_ID,
-            &FAIL_CERT, &FAIL_CERT_SIZE));
+    TEST_ASSERT(
+        VCCERT_STATUS_SUCCESS
+            == create_signed_certificate(
+                    true, VCCERT_FIELD_TYPE_ARTIFACT_ID, &FAIL_CERT,
+                    &FAIL_CERT_SIZE));
 
     /* creating our fail parser should succeed. */
-    ASSERT_EQ(VCCERT_STATUS_SUCCESS,
-        vccert_parser_init(
-            &options, &failparser, FAIL_CERT, FAIL_CERT_SIZE));
+    TEST_ASSERT(
+        VCCERT_STATUS_SUCCESS
+            == vccert_parser_init(
+                    &fixture.options, &failparser, FAIL_CERT, FAIL_CERT_SIZE));
 
     /* attestation should fail with
      * VCCERT_ERROR_PARSER_ATTEST_MISSING_ARTIFACT_ID */
-    EXPECT_EQ(VCCERT_ERROR_PARSER_ATTEST_MISSING_ARTIFACT_ID,
-        vccert_parser_attest(&failparser, 77, true));
+    TEST_EXPECT(
+        VCCERT_ERROR_PARSER_ATTEST_MISSING_ARTIFACT_ID
+            == vccert_parser_attest(&failparser, 77, true));
 
     /* clean up. */
     free(FAIL_CERT);
     dispose((disposable_t*)&failparser);
-}
+END_TEST_F()
 
 /**
  * Dummy transaction resolver.
@@ -760,4 +783,3 @@ cleanup_alloc_opts:
 
     return retval;
 }
-#endif
